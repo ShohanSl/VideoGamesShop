@@ -11,3 +11,5 @@
 * REST API
 * DTO
 * Mapper
+---
+[SonarCloud](https://sonarcloud.io/summary/overall?id=ShohanSl_VideoGamesShop&branch=main)
