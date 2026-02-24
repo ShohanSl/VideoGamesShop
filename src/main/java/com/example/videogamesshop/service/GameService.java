@@ -4,20 +4,15 @@ import com.example.videogamesshop.dto.GameCatalogResponse;
 import com.example.videogamesshop.dto.GameFullResponse;
 import com.example.videogamesshop.mapper.GameMapper;
 import com.example.videogamesshop.repository.GameRepository;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class GameService {
     private final GameRepository gameRepository;
     private final GameMapper gameMapper;
-
-    @Autowired
-    public GameService(GameRepository gameRepository, GameMapper gameMapper) {
-        this.gameRepository = gameRepository;
-        this.gameMapper = gameMapper;
-    }
 
     public List<GameCatalogResponse> getAllCatalog() {
         return gameRepository.findAll().stream()

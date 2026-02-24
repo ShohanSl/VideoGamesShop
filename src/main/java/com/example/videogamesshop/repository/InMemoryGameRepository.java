@@ -1,11 +1,11 @@
 package com.example.videogamesshop.repository;
 
 import com.example.videogamesshop.entity.Game;
+import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemoryGameRepository implements GameRepository {

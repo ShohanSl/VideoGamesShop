@@ -3,10 +3,13 @@ package com.example.videogamesshop.mapper;
 import com.example.videogamesshop.dto.GameCatalogResponse;
 import com.example.videogamesshop.dto.GameFullResponse;
 import com.example.videogamesshop.entity.Game;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class GameMapper {
+
     public GameCatalogResponse toCatalogResponse(Game game) {
         return new GameCatalogResponse(
                 game.getId(),
@@ -22,7 +25,8 @@ public class GameMapper {
                 game.getTitle(),
                 game.getGenre(),
                 game.getPrice(),
-                game.getReleaseDate()
+                game.getReleaseDate(),
+                game.getDescription()
         );
     }
 }
