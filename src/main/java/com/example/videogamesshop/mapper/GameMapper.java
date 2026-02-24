@@ -22,8 +22,7 @@ public class GameMapper {
                 game.getTitle(),
                 game.getGenre(),
                 game.getPrice(),
-                game.getReleaseDate(),
-                game.getDescription()
+                game.getReleaseDate()
         );
     }
 }

@@ -8,18 +8,16 @@ public class GameFullResponse {
     private String genre;
     private Double price;
     private LocalDate releaseDate;
-    private String description;
 
     public GameFullResponse() {}
 
     public GameFullResponse(Long id, String title, String genre, Double price,
-                LocalDate releaseDate, String description) {
+                LocalDate releaseDate) {
         this.id = id;
         this.title = title;
         this.genre = genre;
         this.price = price;
         this.releaseDate = releaseDate;
-        this.description = description;
     }
 
     public Long getId() {
@@ -60,13 +58,5 @@ public class GameFullResponse {
 
     public void setReleaseDate(LocalDate releaseDate) {
         this.releaseDate = releaseDate;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 }
