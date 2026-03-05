@@ -1,18 +1,18 @@
-package com.example.videogamesshop.dto;
+package com.example.videogamesshop.dto.game;
 
+import com.example.videogamesshop.dto.category.CategoryDto;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
+
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameFullResponse {
+public class GameCatalogResponse {
     private Long id;
     private String title;
-    private String genre;
     private Double price;
-    private LocalDate releaseDate;
-    private String description;
+    private List<CategoryDto> categories;
 }

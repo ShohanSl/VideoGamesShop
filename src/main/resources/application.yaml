@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+spring:
+
+  application:
+    name: video_games_shop
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/videogames_shop
+    username: postgres
+    password: 1111
