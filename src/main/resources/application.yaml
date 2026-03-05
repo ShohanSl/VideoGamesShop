@@ -13,4 +13,4 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/videogames_shop
     username: postgres
-    password: 1111
+    password: ${DB_PASSWORD}
