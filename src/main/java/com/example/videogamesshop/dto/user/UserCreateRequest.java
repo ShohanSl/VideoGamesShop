@@ -1,10 +1,10 @@
-package com.example.videogamesshop.dto.library;
+package com.example.videogamesshop.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class LibraryCreateRequest {
+public class UserCreateRequest {
     @NotBlank(message = "Username is required")
     private String username;
 }

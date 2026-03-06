@@ -1,9 +1,9 @@
 package com.example.videogamesshop.controller;
 
-import com.example.videogamesshop.dto.library.LibraryCreateRequest;
-import com.example.videogamesshop.dto.library.LibraryFullResponse;
-import com.example.videogamesshop.dto.library.LibraryUpdateRequest;
-import com.example.videogamesshop.service.LibraryService;
+import com.example.videogamesshop.dto.user.UserCreateRequest;
+import com.example.videogamesshop.dto.user.UserFullResponse;
+import com.example.videogamesshop.dto.user.UserUpdateRequest;
+import com.example.videogamesshop.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,44 +18,44 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/libs")
+@RequestMapping("/users")
 @RequiredArgsConstructor
-public class LibraryController {
+public class UserController {
 
-    private final LibraryService libraryService;
+    private final UserService userService;
 
     @GetMapping("/{id}")
-    public LibraryFullResponse getUserById(@PathVariable Long id) {
-        return libraryService.getUserById(id);
+    public UserFullResponse getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public LibraryFullResponse createUser(@Valid @RequestBody LibraryCreateRequest request) {
-        return libraryService.createUser(request);
+    public UserFullResponse createUser(@Valid @RequestBody UserCreateRequest request) {
+        return userService.createUser(request);
     }
 
     @PutMapping("/{id}")
-    public LibraryFullResponse updateUser(@PathVariable Long id,
-                                          @Valid @RequestBody LibraryUpdateRequest request) {
-        return libraryService.updateUser(id, request);
+    public UserFullResponse updateUser(@PathVariable Long id,
+                                       @Valid @RequestBody UserUpdateRequest request) {
+        return userService.updateUser(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
-        libraryService.deleteUser(id);
+        userService.deleteUser(id);
     }
 
     @PostMapping("/{userId}/games/{gameId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void addGameToUser(@PathVariable Long userId, @PathVariable Long gameId) {
-        libraryService.addGameToUser(userId, gameId);
+        userService.addGameToUser(userId, gameId);
     }
 
     @DeleteMapping("/{userId}/games/{gameId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeGameFromUser(@PathVariable Long userId, @PathVariable Long gameId) {
-        libraryService.removeGameFromUser(userId, gameId);
+        userService.removeGameFromUser(userId, gameId);
     }
 }

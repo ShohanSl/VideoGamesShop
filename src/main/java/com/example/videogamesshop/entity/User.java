@@ -20,12 +20,12 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "libraries")
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Library {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,8 +36,8 @@ public class Library {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "library_game",
-            joinColumns = @JoinColumn(name = "library_id"),
+            name = "user_game",
+            joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "game_id")
     )
     @ToString.Exclude

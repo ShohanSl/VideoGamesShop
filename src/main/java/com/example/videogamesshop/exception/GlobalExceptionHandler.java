@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
             DeveloperNotFoundException.class,
             PublisherNotFoundException.class,
             GameNotFoundException.class,
-            LibraryNotFoundException.class
+            UserNotFoundException.class
     })
 
     public ResponseEntity<Object> handleNotFoundException(RuntimeException ex) {

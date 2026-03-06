@@ -68,5 +68,5 @@ public class Game {
     @ManyToMany(mappedBy = "games")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Library> libraries = new HashSet<>();
+    private Set<User> libraries = new HashSet<>();
 }

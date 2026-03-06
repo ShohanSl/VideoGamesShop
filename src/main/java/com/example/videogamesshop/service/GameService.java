@@ -7,7 +7,7 @@ import com.example.videogamesshop.dto.game.GameUpdateRequest;
 import com.example.videogamesshop.entity.Category;
 import com.example.videogamesshop.entity.Developer;
 import com.example.videogamesshop.entity.Game;
-import com.example.videogamesshop.entity.Library;
+import com.example.videogamesshop.entity.User;
 import com.example.videogamesshop.entity.Publisher;
 import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.exception.DeveloperNotFoundException;
@@ -113,8 +113,8 @@ public class GameService {
         if (game.getCategories() != null) {
             game.getCategories().forEach(cat -> cat.getGames().remove(game));
         }
-        for (Library library : game.getLibraries()) {
-            library.getGames().remove(game);
+        for (User user : game.getLibraries()) {
+            user.getGames().remove(game);
         }
         gameRepository.delete(game);
     }
