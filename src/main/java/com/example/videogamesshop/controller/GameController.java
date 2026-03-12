@@ -34,6 +34,11 @@ public class GameController {
         return gameService.getAllCatalog();
     }
 
+    @GetMapping("/N+1")
+    public List<GameCatalogResponse> getCatalogWithTrouble() {
+        return gameService.getCatalogWithTrouble();
+    }
+
     @GetMapping("/{id}")
     public GameFullResponse getGameById(@PathVariable Long id) {
         return gameService.getGameById(id);

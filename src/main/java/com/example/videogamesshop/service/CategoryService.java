@@ -3,6 +3,7 @@ package com.example.videogamesshop.service;
 import com.example.videogamesshop.dto.category.CategoryCreateRequest;
 import com.example.videogamesshop.dto.category.CategoryDto;
 import com.example.videogamesshop.entity.Category;
+import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.mapper.CategoryMapper;
 import com.example.videogamesshop.repository.CategoryRepository;
@@ -43,9 +44,12 @@ public class CategoryService {
     }
 
     public void deleteCategory(Long id) {
-        if (!categoryRepository.existsById(id)) {
-            throw new CategoryNotFoundException(id);
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+        for (Game game : category.getGames()) {
+            game.getCategories().remove(category);
         }
-        categoryRepository.deleteById(id);
+        category.getGames().clear();
+        categoryRepository.delete(category);
     }
 }

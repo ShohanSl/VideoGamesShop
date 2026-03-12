@@ -12,6 +12,9 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findByCategories(@Param("categoryIds") List<Long> categoryIds,
                                 @Param("categoryCount") long categoryCount);
 
-    @Query("SELECT DISTINCT g FROM Game g LEFT JOIN FETCH g.categories")
-    List<Game> findAllWithCategories();
+    @Query("SELECT DISTINCT g FROM Game g "
+            + "LEFT JOIN FETCH g.developer "
+            + "LEFT JOIN FETCH g.publisher "
+            + "LEFT JOIN FETCH g.categories")
+    List<Game> findAllWithDetails();
 }

@@ -2,6 +2,7 @@ package com.example.videogamesshop.service;
 
 import com.example.videogamesshop.dto.user.UserCreateRequest;
 import com.example.videogamesshop.dto.user.UserFullResponse;
+import com.example.videogamesshop.dto.user.UserShortResponse;
 import com.example.videogamesshop.dto.user.UserUpdateRequest;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.User;
@@ -10,6 +11,7 @@ import com.example.videogamesshop.exception.UserNotFoundException;
 import com.example.videogamesshop.mapper.UserMapper;
 import com.example.videogamesshop.repository.GameRepository;
 import com.example.videogamesshop.repository.UserRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
+
+    public List<UserShortResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(UserMapper::toShortResponse)
+                .toList();
+    }
 
     public UserFullResponse getUserById(Long id) {
         User user = userRepository.findById(id)

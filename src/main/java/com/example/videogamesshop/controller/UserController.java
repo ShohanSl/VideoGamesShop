@@ -2,9 +2,11 @@ package com.example.videogamesshop.controller;
 
 import com.example.videogamesshop.dto.user.UserCreateRequest;
 import com.example.videogamesshop.dto.user.UserFullResponse;
+import com.example.videogamesshop.dto.user.UserShortResponse;
 import com.example.videogamesshop.dto.user.UserUpdateRequest;
 import com.example.videogamesshop.service.UserService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+
+    @GetMapping
+    public List<UserShortResponse> getAllUsers() {
+        return userService.getAllUsers();
+    }
 
     @GetMapping("/{id}")
     public UserFullResponse getUserById(@PathVariable Long id) {

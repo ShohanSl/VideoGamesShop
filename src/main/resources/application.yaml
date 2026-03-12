@@ -1,5 +1,10 @@
 server:
   port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: true
 
 spring:
 
@@ -9,8 +14,45 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        show_sql: false  # отключаем встроенный показ SQL (он многословный)
+        format_sql: false # отключаем форматирование
+        use_sql_comments: false # отключаем комментарии
 
   datasource:
     url: jdbc:postgresql://localhost:5432/videogames_shop
     username: postgres
     password: ${DB_PASSWORD}
+
+logging:
+  level:
+    # SQL запросы - показываем
+    org.hibernate.SQL: debug
+    # Всё остальное от Hibernate - отключаем полностью
+    org.hibernate: off
+    org.hibernate.orm.jdbc.bind: off
+    org.hibernate.SQL_SLOW: off
+    org.hibernate.cache: off
+    org.hibernate.stat: off
+    org.hibernate.hql: off
+    org.hibernate.type: off
+    org.hibernate.tool: off
+    org.hibernate.event: off
+    org.hibernate.engine: off
+    org.hibernate.resource: off
+
+    # Всё от Spring - только ошибки (или off)
+    org.springframework: off
+    org.springframework.boot: off
+    org.springframework.web: off
+    org.springframework.data: off
+    org.springframework.transaction: off
+
+    # Ваше приложение - только ошибки
+    com.example.videogamesshop: off
+
+  pattern:
+    # Только само сообщение, без времени, уровня и т.д.
+    console: "%msg%n"

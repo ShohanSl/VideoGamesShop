@@ -3,6 +3,7 @@ package com.example.videogamesshop.mapper;
 import com.example.videogamesshop.dto.game.GameSimpleDto;
 import com.example.videogamesshop.dto.user.UserCreateRequest;
 import com.example.videogamesshop.dto.user.UserFullResponse;
+import com.example.videogamesshop.dto.user.UserShortResponse;
 import com.example.videogamesshop.dto.user.UserUpdateRequest;
 import com.example.videogamesshop.entity.User;
 import java.util.List;
@@ -12,6 +13,13 @@ public class UserMapper {
     private UserMapper() {
         throw new UnsupportedOperationException(
                 "This is a utility class and cannot be instantiated");
+    }
+
+    public static UserShortResponse toShortResponse(User user) {
+        UserShortResponse response = new UserShortResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        return response;
     }
 
     public static UserFullResponse toFullResponse(User user) {

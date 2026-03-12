@@ -7,8 +7,8 @@ import com.example.videogamesshop.dto.game.GameUpdateRequest;
 import com.example.videogamesshop.entity.Category;
 import com.example.videogamesshop.entity.Developer;
 import com.example.videogamesshop.entity.Game;
-import com.example.videogamesshop.entity.User;
 import com.example.videogamesshop.entity.Publisher;
+import com.example.videogamesshop.entity.User;
 import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.exception.DeveloperNotFoundException;
 import com.example.videogamesshop.exception.GameNotFoundException;
@@ -35,7 +35,7 @@ public class GameService {
     private final GameMapper gameMapper;
 
     public List<GameCatalogResponse> getAllCatalog() {
-        return gameRepository.findAllWithCategories().stream()
+        return gameRepository.findAllWithDetails().stream()
                 .map(gameMapper::toCatalogResponse)
                 .toList();
     }
@@ -117,5 +117,11 @@ public class GameService {
             user.getGames().remove(game);
         }
         gameRepository.delete(game);
+    }
+
+    public List<GameCatalogResponse> getCatalogWithTrouble() {
+        return gameRepository.findAll().stream()
+                .map(gameMapper::toCatalogResponse)
+                .toList();
     }
 }
