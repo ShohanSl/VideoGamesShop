@@ -1,5 +1,7 @@
 package com.example.videogamesshop.service;
 
+import com.example.videogamesshop.cache.GameCacheService;
+import com.example.videogamesshop.cache.GameQueryKey;
 import com.example.videogamesshop.dto.game.GameCatalogResponse;
 import com.example.videogamesshop.dto.game.GameFullResponse;
 import com.example.videogamesshop.dto.game.GameRequest;
@@ -23,6 +25,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,9 +37,36 @@ public class GameService {
     private final CategoryRepository categoryRepository;
     private final PublisherRepository publisherRepository;
     private final GameMapper gameMapper;
+    private final GameCacheService cacheService;
 
-    public List<GameCatalogResponse> getAllCatalog() {
-        return gameRepository.findAllWithDetails().stream()
+    public Page<GameCatalogResponse> getAllCatalog(Pageable pageable) {
+        GameQueryKey key = new GameQueryKey(null, pageable);
+        Page<GameCatalogResponse> cached = cacheService.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Page<GameCatalogResponse> result = gameRepository.findAllWithDetails(pageable)
+                .map(gameMapper::toCatalogResponse);
+        cacheService.put(key, result);
+        return result;
+    }
+
+    public Page<GameCatalogResponse> getCatalogByCategories(List<Long> categoryIds,
+                                                            Pageable pageable) {
+        GameQueryKey key = new GameQueryKey(categoryIds, pageable);
+        Page<GameCatalogResponse> cached = cacheService.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Page<GameCatalogResponse> result = gameRepository.findByCategoriesWithDetails(categoryIds,
+                        pageable)
+                .map(gameMapper::toCatalogResponse);
+        cacheService.put(key, result);
+        return result;
+    }
+
+    public List<GameCatalogResponse> getCatalogByPublisher(Long publisherId) {
+        return gameRepository.findByPublisherIdNative(publisherId).stream()
                 .map(gameMapper::toCatalogResponse)
                 .toList();
     }
@@ -44,17 +75,6 @@ public class GameService {
         return gameRepository.findById(id)
                 .map(gameMapper::toFullResponse)
                 .orElseThrow(() -> new GameNotFoundException(id));
-    }
-
-    public List<GameCatalogResponse> getCatalogByCategories(List<Long> categoryIds) {
-        if (categoryIds == null || categoryIds.isEmpty()) {
-            return getAllCatalog();
-        }
-        long categoryCount = categoryIds.size();
-        List<Game> games = gameRepository.findByCategories(categoryIds, categoryCount);
-        return games.stream()
-                .map(gameMapper::toCatalogResponse)
-                .toList();
     }
 
     public GameFullResponse createGame(GameRequest request) {
@@ -81,6 +101,7 @@ public class GameService {
             categories.forEach(cat -> cat.getGames().add(game));
         }
         Game savedGame = gameRepository.save(game);
+        cacheService.clear();
         return gameMapper.toFullResponse(savedGame);
     }
 
@@ -101,6 +122,7 @@ public class GameService {
         }
 
         gameMapper.updateEntity(existingGame, request);
+        cacheService.clear();
         return gameMapper.toFullResponse(existingGame);
     }
 
@@ -117,6 +139,7 @@ public class GameService {
             user.getGames().remove(game);
         }
         gameRepository.delete(game);
+        cacheService.clear();
     }
 
     public List<GameCatalogResponse> getCatalogWithTrouble() {

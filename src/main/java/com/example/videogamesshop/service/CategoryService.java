@@ -1,5 +1,6 @@
 package com.example.videogamesshop.service;
 
+import com.example.videogamesshop.cache.GameCacheService;
 import com.example.videogamesshop.dto.category.CategoryCreateRequest;
 import com.example.videogamesshop.dto.category.CategoryDto;
 import com.example.videogamesshop.entity.Category;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class CategoryService {
     private final CategoryRepository categoryRepository;
+    private final GameCacheService cacheService;
 
     public List<CategoryDto> getAllCategories() {
         return categoryRepository.findAll().stream()
@@ -33,6 +35,7 @@ public class CategoryService {
     public CategoryDto createCategory(CategoryCreateRequest request) {
         Category category = CategoryMapper.toEntity(request);
         Category savedCategory = categoryRepository.save(category);
+        cacheService.clear();
         return CategoryMapper.toCategoryDto(savedCategory);
     }
 
@@ -40,6 +43,7 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryNotFoundException(id));
         CategoryMapper.updateEntity(category, request);
+        cacheService.clear();
         return CategoryMapper.toCategoryDto(category);
     }
 
@@ -51,5 +55,6 @@ public class CategoryService {
         }
         category.getGames().clear();
         categoryRepository.delete(category);
+        cacheService.clear();
     }
 }

@@ -17,9 +17,9 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        show_sql: false  # отключаем встроенный показ SQL (он многословный)
-        format_sql: false # отключаем форматирование
-        use_sql_comments: false # отключаем комментарии
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
 
   datasource:
     url: jdbc:postgresql://localhost:5432/videogames_shop
@@ -28,9 +28,7 @@ spring:
 
 logging:
   level:
-    # SQL запросы - показываем
     org.hibernate.SQL: debug
-    # Всё остальное от Hibernate - отключаем полностью
     org.hibernate: off
     org.hibernate.orm.jdbc.bind: off
     org.hibernate.SQL_SLOW: off
@@ -43,16 +41,13 @@ logging:
     org.hibernate.engine: off
     org.hibernate.resource: off
 
-    # Всё от Spring - только ошибки (или off)
     org.springframework: off
     org.springframework.boot: off
     org.springframework.web: off
     org.springframework.data: off
     org.springframework.transaction: off
 
-    # Ваше приложение - только ошибки
     com.example.videogamesshop: off
 
   pattern:
-    # Только само сообщение, без времени, уровня и т.д.
     console: "%msg%n"
