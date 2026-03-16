@@ -65,8 +65,8 @@ public class GameService {
         return result;
     }
 
-    public List<GameCatalogResponse> getCatalogByPublisher(Long publisherId) {
-        return gameRepository.findByPublisherIdNative(publisherId).stream()
+    public List<GameCatalogResponse> getCatalogByPublisher(String publisherName) {
+        return gameRepository.findByPublisherNameNative(publisherName).stream()
                 .map(gameMapper::toCatalogResponse)
                 .toList();
     }

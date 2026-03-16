@@ -41,8 +41,8 @@ public class GameController {
 
     @GetMapping("/by-publisher")
     public List<GameCatalogResponse> getGamesByPublisher(
-            @RequestParam Long publisherId) {
-        return gameService.getCatalogByPublisher(publisherId);
+            @RequestParam String publisherName) {
+        return gameService.getCatalogByPublisher(publisherName);
     }
 
     @GetMapping("/N+1")
