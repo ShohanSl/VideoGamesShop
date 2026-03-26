@@ -31,9 +31,7 @@ public class UserService {
     }
 
     public UserFullResponse getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
-        return UserMapper.toFullResponse(user);
+        return UserMapper.toFullResponse(findUserById(id));
     }
 
     public UserFullResponse createUser(UserCreateRequest request) {
@@ -43,15 +41,13 @@ public class UserService {
     }
 
     public UserFullResponse updateUser(Long id, UserUpdateRequest request) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+        User user = findUserById(id);
         UserMapper.updateEntity(user, request);
         return UserMapper.toFullResponse(user);
     }
 
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+        User user = findUserById(id);
         for (Game game : user.getGames()) {
             game.getLibraries().remove(user);
         }
@@ -59,18 +55,30 @@ public class UserService {
     }
 
     public void addGameToUser(Long userId, Long gameId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new GameNotFoundException(gameId));
-        user.addGame(game);
+        updateUserGameRelation(userId, gameId, true);
     }
 
     public void removeGameFromUser(Long userId, Long gameId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new GameNotFoundException(gameId));
+        updateUserGameRelation(userId, gameId, false);
+    }
+
+    private void updateUserGameRelation(Long userId, Long gameId, boolean attachGame) {
+        User user = findUserById(userId);
+        Game game = findGameById(gameId);
+        if (attachGame) {
+            user.addGame(game);
+            return;
+        }
         user.removeGame(game);
+    }
+
+    private User findUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    private Game findGameById(Long id) {
+        return gameRepository.findById(id)
+                .orElseThrow(() -> new GameNotFoundException(id));
     }
 }

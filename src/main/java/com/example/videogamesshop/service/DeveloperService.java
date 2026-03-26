@@ -36,9 +36,7 @@ public class DeveloperService {
     }
 
     public DeveloperFullResponse getDeveloperById(Long id) {
-        Developer developer = developerRepository.findById(id)
-                .orElseThrow(() -> new DeveloperNotFoundException(id));
-        return developerMapper.toFullResponse(developer);
+        return developerMapper.toFullResponse(findDeveloperById(id));
     }
 
     public DeveloperFullResponse createDeveloper(DeveloperCreateRequest request) {
@@ -48,8 +46,7 @@ public class DeveloperService {
     }
 
     public DeveloperFullResponse updateDeveloper(Long id, DeveloperUpdateRequest request) {
-        Developer developer = developerRepository.findById(id)
-                .orElseThrow(() -> new DeveloperNotFoundException(id));
+        Developer developer = findDeveloperById(id);
         developerMapper.updateEntity(developer, request);
         return developerMapper.toFullResponse(developer);
     }
@@ -62,26 +59,28 @@ public class DeveloperService {
     }
 
     public void addGameToDeveloper(Long developerId, Long gameId) {
-        Developer developer = developerRepository.findById(developerId)
-                .orElseThrow(() -> new DeveloperNotFoundException(developerId));
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new GameNotFoundException(gameId));
-        developer.addGame(game);
+        updateDeveloperGameRelation(developerId, gameId, true);
     }
 
     public void removeGameFromDeveloper(Long developerId, Long gameId) {
-        Developer developer = developerRepository.findById(developerId)
-                .orElseThrow(() -> new DeveloperNotFoundException(developerId));
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new GameNotFoundException(gameId));
-        developer.removeGame(game);
+        updateDeveloperGameRelation(developerId, gameId, false);
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void createDeveloperWithGamesWithoutTransaction(DeveloperCreateRequest devRequest,
                                                            List<GameRequest> gameRequests) {
-        Developer developer = DeveloperMapper.toEntity(devRequest);
-        developer = developerRepository.save(developer);
+        createDeveloperWithGames(devRequest, gameRequests);
+    }
+
+    @Transactional
+    public void createDeveloperWithGamesWithTransaction(DeveloperCreateRequest devRequest,
+                                                        List<GameRequest> gameRequests) {
+        createDeveloperWithGames(devRequest, gameRequests);
+    }
+
+    private void createDeveloperWithGames(DeveloperCreateRequest devRequest,
+                                          List<GameRequest> gameRequests) {
+        Developer developer = developerRepository.save(DeveloperMapper.toEntity(devRequest));
         for (GameRequest gameRequest : gameRequests) {
             Game game = gameMapper.toEntity(gameRequest);
             game.setDeveloper(developer);
@@ -89,15 +88,23 @@ public class DeveloperService {
         }
     }
 
-    @Transactional
-    public void createDeveloperWithGamesWithTransaction(DeveloperCreateRequest devRequest,
-                                                        List<GameRequest> gameRequests) {
-        Developer developer = DeveloperMapper.toEntity(devRequest);
-        developer = developerRepository.save(developer);
-        for (GameRequest gameRequest : gameRequests) {
-            Game game = gameMapper.toEntity(gameRequest);
-            game.setDeveloper(developer);
-            gameRepository.save(game);
+    private void updateDeveloperGameRelation(Long developerId, Long gameId, boolean attachGame) {
+        Developer developer = findDeveloperById(developerId);
+        Game game = findGameById(gameId);
+        if (attachGame) {
+            developer.addGame(game);
+            return;
         }
+        developer.removeGame(game);
+    }
+
+    private Developer findDeveloperById(Long id) {
+        return developerRepository.findById(id)
+                .orElseThrow(() -> new DeveloperNotFoundException(id));
+    }
+
+    private Game findGameById(Long id) {
+        return gameRepository.findById(id)
+                .orElseThrow(() -> new GameNotFoundException(id));
     }
 }

@@ -27,9 +27,7 @@ public class CategoryService {
     }
 
     public CategoryDto getCategoryById(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException(id));
-        return CategoryMapper.toCategoryDto(category);
+        return CategoryMapper.toCategoryDto(findCategoryById(id));
     }
 
     public CategoryDto createCategory(CategoryCreateRequest request) {
@@ -40,21 +38,24 @@ public class CategoryService {
     }
 
     public CategoryDto updateCategory(Long id, CategoryCreateRequest request) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException(id));
+        Category category = findCategoryById(id);
         CategoryMapper.updateEntity(category, request);
         cacheService.clear();
         return CategoryMapper.toCategoryDto(category);
     }
 
     public void deleteCategory(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException(id));
+        Category category = findCategoryById(id);
         for (Game game : category.getGames()) {
             game.getCategories().remove(category);
         }
         category.getGames().clear();
         categoryRepository.delete(category);
         cacheService.clear();
+    }
+
+    private Category findCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
     }
 }

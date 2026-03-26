@@ -25,9 +25,7 @@ public class PublisherService {
     }
 
     public PublisherFullResponse getPublisherById(Long id) {
-        Publisher publisher = publisherRepository.findById(id)
-                .orElseThrow(() -> new PublisherNotFoundException(id));
-        return PublisherMapper.toFullResponse(publisher);
+        return PublisherMapper.toFullResponse(findPublisherById(id));
     }
 
     public PublisherFullResponse createPublisher(PublisherCreateRequest request) {
@@ -37,8 +35,7 @@ public class PublisherService {
     }
 
     public PublisherFullResponse updatePublisher(Long id, PublisherCreateRequest request) {
-        Publisher publisher = publisherRepository.findById(id)
-                .orElseThrow(() -> new PublisherNotFoundException(id));
+        Publisher publisher = findPublisherById(id);
         PublisherMapper.updateEntity(publisher, request);
         return PublisherMapper.toFullResponse(publisher);
     }
@@ -48,5 +45,10 @@ public class PublisherService {
             throw new PublisherNotFoundException(id);
         }
         publisherRepository.deleteById(id);
+    }
+
+    private Publisher findPublisherById(Long id) {
+        return publisherRepository.findById(id)
+                .orElseThrow(() -> new PublisherNotFoundException(id));
     }
 }
