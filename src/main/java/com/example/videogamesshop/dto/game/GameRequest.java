@@ -22,7 +22,8 @@ public class GameRequest {
 
     @Schema(description = "Game price", example = "49.99")
     @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Price must be greater than or equal to 0")
+    @DecimalMin(value = "0.0", inclusive = true,
+            message = "Price must be greater than or equal to 0")
     private Double price;
 
     @Schema(description = "Release date", example = "2015-05-19")

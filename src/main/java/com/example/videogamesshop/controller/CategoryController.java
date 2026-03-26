@@ -3,12 +3,12 @@ package com.example.videogamesshop.controller;
 import com.example.videogamesshop.dto.category.CategoryCreateRequest;
 import com.example.videogamesshop.dto.category.CategoryDto;
 import com.example.videogamesshop.dto.error.ApiErrorResponse;
+import com.example.videogamesshop.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.example.videogamesshop.service.CategoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -45,7 +45,8 @@ public class CategoryController {
     @ApiResponse(responseCode = "200", description = "Category found")
     @ApiResponse(responseCode = "404", description = "Category not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    public CategoryDto getCategoryById(@PathVariable @Positive(message = "Id must be positive") Long id) {
+    public CategoryDto getCategoryById(@PathVariable @Positive(message = "Id must be positive")
+                                           Long id) {
         return categoryService.getCategoryById(id);
     }
 
@@ -58,7 +59,8 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update category by id")
-    public CategoryDto updateCategory(@PathVariable @Positive(message = "Id must be positive") Long id,
+    public CategoryDto updateCategory(@PathVariable @Positive(message = "Id must be positive")
+                                          Long id,
                                       @Valid @RequestBody CategoryCreateRequest request) {
         return categoryService.updateCategory(id, request);
     }

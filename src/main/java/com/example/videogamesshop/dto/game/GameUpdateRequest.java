@@ -19,7 +19,8 @@ public class GameUpdateRequest {
     private String title;
 
     @Schema(description = "Game price", example = "39.99")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Price must be greater than or equal to 0")
+    @DecimalMin(value = "0.0", inclusive = true,
+            message = "Price must be greater than or equal to 0")
     private Double price;
 
     @Schema(description = "Release date", example = "2015-05-19")

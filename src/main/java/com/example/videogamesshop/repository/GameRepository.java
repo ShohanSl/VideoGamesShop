@@ -12,9 +12,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface GameRepository extends JpaRepository<Game, Long> {
 
-    @Query(value = "SELECT g.* FROM games g " +
-            "JOIN publishers p ON g.publisher_id = p.id " +
-            "WHERE p.name = :publisherName",
+    @Query(value = "SELECT g.* FROM games g "
+            + "JOIN publishers p ON g.publisher_id = p.id "
+            + "WHERE p.name = :publisherName",
             nativeQuery = true)
     List<Game> findByPublisherNameNative(@Param("publisherName") String publisherName);
 

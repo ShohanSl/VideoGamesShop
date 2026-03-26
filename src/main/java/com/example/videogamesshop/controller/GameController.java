@@ -4,12 +4,12 @@ import com.example.videogamesshop.dto.game.GameCatalogResponse;
 import com.example.videogamesshop.dto.game.GameFullResponse;
 import com.example.videogamesshop.dto.game.GameRequest;
 import com.example.videogamesshop.dto.game.GameUpdateRequest;
+import com.example.videogamesshop.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-import com.example.videogamesshop.service.GameService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,7 +39,8 @@ public class GameController {
     @GetMapping
     @Operation(summary = "Get games catalog with optional category filter")
     public Page<GameCatalogResponse> getCatalog(
-            @RequestParam(required = false) List<@Positive(message = "Category id must be positive") Long> categoryIds,
+            @RequestParam(required = false) List<@Positive
+                    (message = "Category id must be positive") Long> categoryIds,
             @PageableDefault(size = 20, sort = "title") Pageable pageable) {
 
         if (categoryIds != null && !categoryIds.isEmpty()) {
