@@ -8,9 +8,11 @@ import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -24,6 +26,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class GlobalExceptionHandler {
 
     private static final String REQUEST_VALIDATION_FAILED = "Request validation failed";
+    private static final String DATA_CONFLICT_MESSAGE =
+            "Request conflicts with the current state of the resource";
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFoundException(
@@ -112,6 +116,22 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflictException(
+            DataIntegrityViolationException ex,
+            HttpServletRequest request
+    ) {
+        String detailMessage = extractMostSpecificMessage(ex);
+
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                ApiErrorCode.CONFLICT_ERROR,
+                DATA_CONFLICT_MESSAGE,
+                request.getRequestURI(),
+                List.of(new ApiValidationError("request", detailMessage))
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnhandledException(
             Exception ex,
@@ -148,5 +168,19 @@ public class GlobalExceptionHandler {
                 details
         );
         return ResponseEntity.status(status).body(response);
+    }
+
+    private String extractMostSpecificMessage(Throwable ex) {
+        Throwable cause = ex;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        if (StringUtils.hasText(cause.getMessage())) {
+            return cause.getMessage();
+        }
+        if (StringUtils.hasText(ex.getMessage())) {
+            return ex.getMessage();
+        }
+        return DATA_CONFLICT_MESSAGE;
     }
 }
