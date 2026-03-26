@@ -1,7 +1,11 @@
 package com.example.videogamesshop.exception;
 
-public class DeveloperNotFoundException extends RuntimeException {
+public class DeveloperNotFoundException extends ResourceNotFoundException {
     public DeveloperNotFoundException(Long id) {
-        super("Developer not found with id: " + id);
+        super("Developer", id);
+    }
+
+    public DeveloperNotFoundException(String field, Object rejectedValue) {
+        super("Developer", field, rejectedValue);
     }
 }

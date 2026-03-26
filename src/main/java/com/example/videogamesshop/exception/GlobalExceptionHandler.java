@@ -1,52 +1,152 @@
 package com.example.videogamesshop.exception;
 
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import com.example.videogamesshop.dto.error.ApiErrorResponse;
+import com.example.videogamesshop.dto.error.ApiValidationError;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@ControllerAdvice
+@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({
-            CategoryNotFoundException.class,
-            DeveloperNotFoundException.class,
-            PublisherNotFoundException.class,
-            GameNotFoundException.class,
-            UserNotFoundException.class
-    })
+    private static final String REQUEST_VALIDATION_FAILED = "Request validation failed";
 
-    public ResponseEntity<Object> handleNotFoundException(RuntimeException ex) {
-        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotFoundException(
+            ResourceNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = "id".equals(ex.getField())
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        String code = "id".equals(ex.getField())
+                ? ApiErrorCode.NOT_FOUND
+                : ApiErrorCode.VALIDATION_ERROR;
+        String message = "id".equals(ex.getField())
+                ? ex.getMessage()
+                : REQUEST_VALIDATION_FAILED;
+
+        return buildResponse(
+                status,
+                code,
+                message,
+                request.getRequestURI(),
+                List.of(new ApiValidationError(ex.getField(), ex.getMessage()))
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        Map<String, String> errors = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
-        body.put("errors", errors);
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiErrorResponse> handleValidationException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        List<ApiValidationError> details = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .sorted(Comparator.comparing(FieldError::getField))
+                .map(error -> new ApiValidationError(error.getField(), error.getDefaultMessage()))
+                .toList();
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                ApiErrorCode.VALIDATION_ERROR,
+                REQUEST_VALIDATION_FAILED,
+                request.getRequestURI(),
+                details
+        );
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(
+            HandlerMethodValidationException ex,
+            HttpServletRequest request
+    ) {
+        List<ApiValidationError> details = ex.getParameterValidationResults()
+                .stream()
+                .flatMap(result -> result.getResolvableErrors().stream()
+                        .map(error -> new ApiValidationError(
+                                result.getMethodParameter().getParameterName(),
+                                error.getDefaultMessage())))
+                .toList();
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                ApiErrorCode.VALIDATION_ERROR,
+                REQUEST_VALIDATION_FAILED,
+                request.getRequestURI(),
+                details
+        );
+    }
+
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class,
+            ConstraintViolationException.class,
+            IllegalArgumentException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleBadRequestException(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                ApiErrorCode.REQUEST_ERROR,
+                ex.getMessage(),
+                request.getRequestURI(),
+                List.of(new ApiValidationError("request", ex.getMessage()))
+        );
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGenericException(Exception ex) {
-        return buildErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ApiErrorResponse> handleUnhandledException(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        log.error("Unhandled exception while processing request [{} {}]",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex);
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ApiErrorCode.INTERNAL_ERROR,
+                "Unexpected server error",
+                request.getRequestURI(),
+                List.of()
+        );
     }
 
-    private ResponseEntity<Object> buildErrorResponse(String message, HttpStatus status) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-        return new ResponseEntity<>(body, status);
+    private ResponseEntity<ApiErrorResponse> buildResponse(
+            HttpStatus status,
+            String code,
+            String message,
+            String path,
+            List<ApiValidationError> details
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                OffsetDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                code,
+                message,
+                path,
+                details
+        );
+        return ResponseEntity.status(status).body(response);
     }
 }

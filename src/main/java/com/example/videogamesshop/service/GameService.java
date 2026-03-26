@@ -79,27 +79,22 @@ public class GameService {
 
     public GameFullResponse createGame(GameRequest request) {
         Developer developer = developerRepository.findById(request.getDeveloperId())
-                .orElseThrow(() -> new DeveloperNotFoundException(request.getDeveloperId()));
-        Publisher publisher = null;
-        if (request.getPublisherId() != null) {
-            publisher = publisherRepository.findById(request.getPublisherId())
-                    .orElseThrow(() -> new PublisherNotFoundException(request.getPublisherId()));
-        }
+                .orElseThrow(() -> new DeveloperNotFoundException(
+                        "developerId", request.getDeveloperId()));
+        Publisher publisher = publisherRepository.findById(request.getPublisherId())
+                .orElseThrow(() -> new PublisherNotFoundException(
+                        "publisherId", request.getPublisherId()));
         Game game = gameMapper.toEntity(request);
         game.setDeveloper(developer);
         game.setPublisher(publisher);
         developer.getGames().add(game);
-        if (publisher != null) {
-            publisher.getGames().add(game);
-        }
-        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-            Set<Category> categories = request.getCategoryIds().stream()
-                    .map(catId -> categoryRepository.findById(catId)
-                            .orElseThrow(() -> new CategoryNotFoundException(catId)))
-                    .collect(Collectors.toSet());
-            game.setCategories(categories);
-            categories.forEach(cat -> cat.getGames().add(game));
-        }
+        publisher.getGames().add(game);
+        Set<Category> categories = request.getCategoryIds().stream()
+                .map(catId -> categoryRepository.findById(catId)
+                        .orElseThrow(() -> new CategoryNotFoundException("categoryIds", catId)))
+                .collect(Collectors.toSet());
+        game.setCategories(categories);
+        categories.forEach(cat -> cat.getGames().add(game));
         Game savedGame = gameRepository.save(game);
         cacheService.clear();
         return gameMapper.toFullResponse(savedGame);
@@ -115,7 +110,7 @@ public class GameService {
             }
             Set<Category> newCategories = request.getCategoryIds().stream()
                     .map(catId -> categoryRepository.findById(catId)
-                            .orElseThrow(() -> new CategoryNotFoundException(catId)))
+                            .orElseThrow(() -> new CategoryNotFoundException("categoryIds", catId)))
                     .collect(Collectors.toSet());
             existingGame.setCategories(newCategories);
             newCategories.forEach(cat -> cat.getGames().add(existingGame));

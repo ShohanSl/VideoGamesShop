@@ -1,10 +1,5 @@
 server:
   port: 8080
-  error:
-    include-message: always
-    include-binding-errors: always
-    include-stacktrace: on_param
-    include-exception: true
 
 spring:
 
@@ -26,28 +21,8 @@ spring:
     username: postgres
     password: ${DB_PASSWORD}
 
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate: off
-    org.hibernate.orm.jdbc.bind: off
-    org.hibernate.SQL_SLOW: off
-    org.hibernate.cache: off
-    org.hibernate.stat: off
-    org.hibernate.hql: off
-    org.hibernate.type: off
-    org.hibernate.tool: off
-    org.hibernate.event: off
-    org.hibernate.engine: off
-    org.hibernate.resource: off
-
-    org.springframework: off
-    org.springframework.boot: off
-    org.springframework.web: off
-    org.springframework.data: off
-    org.springframework.transaction: off
-
-    com.example.videogamesshop: off
-
-  pattern:
-    console: "%msg%n"
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html

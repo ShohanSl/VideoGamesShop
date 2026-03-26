@@ -62,10 +62,18 @@ public class GameMapper {
     }
 
     public void updateEntity(Game game, GameUpdateRequest request) {
-        game.setTitle(request.getTitle());
-        game.setPrice(request.getPrice());
-        game.setReleaseDate(request.getReleaseDate());
-        game.setDescription(request.getDescription());
+        if (request.getTitle() != null) {
+            game.setTitle(request.getTitle());
+        }
+        if (request.getPrice() != null) {
+            game.setPrice(request.getPrice());
+        }
+        if (request.getReleaseDate() != null) {
+            game.setReleaseDate(request.getReleaseDate());
+        }
+        if (request.getDescription() != null) {
+            game.setDescription(request.getDescription());
+        }
     }
 
     public static GameSimpleDto toGameSimpleDto(Game game) {

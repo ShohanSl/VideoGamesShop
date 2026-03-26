@@ -1,7 +1,11 @@
 package com.example.videogamesshop.exception;
 
-public class UserNotFoundException extends RuntimeException {
+public class UserNotFoundException extends ResourceNotFoundException {
     public UserNotFoundException(Long id) {
-        super("User not found with id: " + id);
+        super("User", id);
+    }
+
+    public UserNotFoundException(String field, Object rejectedValue) {
+        super("User", field, rejectedValue);
     }
 }

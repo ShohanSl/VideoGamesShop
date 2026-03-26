@@ -2,11 +2,15 @@ package com.example.videogamesshop.controller;
 
 import com.example.videogamesshop.dto.publisher.PublisherCreateRequest;
 import com.example.videogamesshop.dto.publisher.PublisherFullResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.videogamesshop.service.PublisherService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,36 +24,45 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/publishers")
 @RequiredArgsConstructor
+@Validated
+@Tag(name = "Publishers", description = "Operations for managing publishers")
 public class PublisherController {
 
     private final PublisherService publisherService;
 
     @GetMapping
+    @Operation(summary = "Get all publishers")
     public List<PublisherFullResponse> getAllPublishers() {
         return publisherService.getAllPublishers();
     }
 
     @GetMapping("/{id}")
-    public PublisherFullResponse getPublisherById(@PathVariable Long id) {
+    @Operation(summary = "Get publisher by id")
+    public PublisherFullResponse getPublisherById(
+            @PathVariable @Positive(message = "Id must be positive") Long id) {
         return publisherService.getPublisherById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create a new publisher")
     public PublisherFullResponse createPublisher(
             @Valid @RequestBody PublisherCreateRequest request) {
         return publisherService.createPublisher(request);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update publisher by id")
     public PublisherFullResponse updatePublisher(
-            @PathVariable Long id, @Valid @RequestBody PublisherCreateRequest request) {
+            @PathVariable @Positive(message = "Id must be positive") Long id,
+            @Valid @RequestBody PublisherCreateRequest request) {
         return publisherService.updatePublisher(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePublisher(@PathVariable Long id) {
+    @Operation(summary = "Delete publisher by id")
+    public void deletePublisher(@PathVariable @Positive(message = "Id must be positive") Long id) {
         publisherService.deletePublisher(id);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.videogamesshop.dto.game;
 
 import com.example.videogamesshop.dto.category.CategoryDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Detailed game response")
 public class GameFullResponse {
     private Long id;
     private String title;
