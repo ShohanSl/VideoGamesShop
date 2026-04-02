@@ -5,6 +5,7 @@ import com.example.videogamesshop.dto.developer.DeveloperCreateRequest;
 import com.example.videogamesshop.dto.developer.DeveloperFullResponse;
 import com.example.videogamesshop.dto.developer.DeveloperUpdateRequest;
 import com.example.videogamesshop.dto.developer.DeveloperWithGamesRequest;
+import com.example.videogamesshop.dto.developer.DeveloperWithGamesResponse;
 import com.example.videogamesshop.service.DeveloperService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -88,16 +89,20 @@ public class DeveloperController {
     }
 
     @PostMapping("/with-games/without-tx")
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create developer with games without transaction")
-    public void testWithoutTransaction(@Valid @RequestBody DeveloperWithGamesRequest request) {
-        developerService.createDeveloperWithGamesWithoutTransaction(
+    public DeveloperWithGamesResponse createDeveloperWithGamesWithoutTransaction(
+            @Valid @RequestBody DeveloperWithGamesRequest request) {
+        return developerService.createDeveloperWithGamesWithoutTransaction(
                 request.getDeveloper(), request.getGames());
     }
 
     @PostMapping("/with-games/with-tx")
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create developer with games in transaction")
-    public void testWithTransaction(@Valid @RequestBody DeveloperWithGamesRequest request) {
-        developerService.createDeveloperWithGamesWithTransaction(
+    public DeveloperWithGamesResponse createDeveloperWithGamesWithTransaction(
+            @Valid @RequestBody DeveloperWithGamesRequest request) {
+        return developerService.createDeveloperWithGamesWithTransaction(
                 request.getDeveloper(), request.getGames());
     }
 }

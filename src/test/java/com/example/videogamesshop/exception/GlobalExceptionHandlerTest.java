@@ -30,6 +30,6 @@ class GlobalExceptionHandlerTest {
                 response.getBody().message());
         assertFalse(response.getBody().details().isEmpty());
         assertEquals("duplicate key value violates unique constraint \"users_username_key\"",
-                response.getBody().details().getFirst().message());
+                response.getBody().details().get(0).message());
     }
 }
