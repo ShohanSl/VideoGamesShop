@@ -1,5 +1,6 @@
 package com.example.videogamesshop.service;
 
+import com.example.videogamesshop.cache.GameCacheService;
 import com.example.videogamesshop.dto.developer.DeveloperBulkGameRequest;
 import com.example.videogamesshop.dto.developer.DeveloperCatalogResponse;
 import com.example.videogamesshop.dto.developer.DeveloperCreateRequest;
@@ -40,6 +41,7 @@ public class DeveloperService {
     private final PublisherRepository publisherRepository;
     private final DeveloperMapper developerMapper;
     private final GameMapper gameMapper;
+    private final GameCacheService cacheService;
 
     public List<DeveloperCatalogResponse> getAllDevelopers() {
         return developerRepository.findAll().stream()
@@ -68,6 +70,7 @@ public class DeveloperService {
             throw new DeveloperNotFoundException(id);
         }
         developerRepository.deleteById(id);
+        cacheService.clear();
     }
 
     public void addGameToDeveloper(Long developerId, Long gameId) {
@@ -81,29 +84,42 @@ public class DeveloperService {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public DeveloperWithGamesResponse createDeveloperWithGamesWithoutTransaction(
             DeveloperCreateRequest devRequest, List<DeveloperBulkGameRequest> gameRequests) {
-        return createDeveloperWithGames(devRequest, gameRequests);
+        return createDeveloperWithGames(devRequest, gameRequests, true);
     }
 
     @Transactional
     public DeveloperWithGamesResponse createDeveloperWithGamesWithTransaction(
             DeveloperCreateRequest devRequest, List<DeveloperBulkGameRequest> gameRequests) {
-        return createDeveloperWithGames(devRequest, gameRequests);
+        return createDeveloperWithGames(devRequest, gameRequests, false);
     }
 
     private DeveloperWithGamesResponse createDeveloperWithGames(
-            DeveloperCreateRequest devRequest, List<DeveloperBulkGameRequest> gameRequests) {
-        Developer developer = developerRepository.save(DeveloperMapper.toEntity(devRequest));
-        List<GameFullResponse> createdGames = gameRequests.stream()
-                .map(gameRequest -> createGameForDeveloper(developer, gameRequest))
-                .map(gameRepository::save)
-                .map(gameMapper::toFullResponse)
-                .toList();
+            DeveloperCreateRequest devRequest, List<DeveloperBulkGameRequest> gameRequests,
+            boolean clearCacheOnFailure) {
+        boolean dataChanged = false;
+        try {
+            Developer developer = developerRepository.save(DeveloperMapper.toEntity(devRequest));
+            dataChanged = true;
 
-        DeveloperWithGamesResponse response = new DeveloperWithGamesResponse();
-        response.setDeveloper(developerMapper.toFullResponse(developer));
-        response.setGames(createdGames);
-        response.setCreatedGamesCount(createdGames.size());
-        return response;
+            List<GameFullResponse> createdGames = gameRequests.stream()
+                    .map(gameRequest -> createGameForDeveloper(developer, gameRequest))
+                    .map(gameRepository::save)
+                    .map(gameMapper::toFullResponse)
+                    .toList();
+
+            cacheService.clear();
+
+            DeveloperWithGamesResponse response = new DeveloperWithGamesResponse();
+            response.setDeveloper(developerMapper.toFullResponse(developer));
+            response.setGames(createdGames);
+            response.setCreatedGamesCount(createdGames.size());
+            return response;
+        } catch (RuntimeException exception) {
+            if (clearCacheOnFailure && dataChanged) {
+                cacheService.clear();
+            }
+            throw exception;
+        }
     }
 
     private Game createGameForDeveloper(Developer developer, DeveloperBulkGameRequest request) {
@@ -132,9 +148,11 @@ public class DeveloperService {
         Game game = findGameById(gameId);
         if (attachGame) {
             developer.addGame(game);
+            cacheService.clear();
             return;
         }
         developer.removeGame(game);
+        cacheService.clear();
     }
 
     private Developer findDeveloperById(Long id) {

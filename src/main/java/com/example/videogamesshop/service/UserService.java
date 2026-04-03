@@ -1,5 +1,6 @@
 package com.example.videogamesshop.service;
 
+import com.example.videogamesshop.cache.GameCacheService;
 import com.example.videogamesshop.dto.user.UserCreateRequest;
 import com.example.videogamesshop.dto.user.UserFullResponse;
 import com.example.videogamesshop.dto.user.UserShortResponse;
@@ -23,6 +24,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
+    private final GameCacheService cacheService;
 
     public List<UserShortResponse> getAllUsers() {
         return userRepository.findAll().stream()
@@ -52,6 +54,7 @@ public class UserService {
             game.getLibraries().remove(user);
         }
         userRepository.delete(user);
+        cacheService.clear();
     }
 
     public void addGameToUser(Long userId, Long gameId) {
@@ -67,9 +70,11 @@ public class UserService {
         Game game = findGameById(gameId);
         if (attachGame) {
             user.addGame(game);
+            cacheService.clear();
             return;
         }
         user.removeGame(game);
+        cacheService.clear();
     }
 
     private User findUserById(Long id) {

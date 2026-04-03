@@ -5,9 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.videogamesshop.cache.GameCacheService;
 import com.example.videogamesshop.dto.developer.DeveloperBulkGameRequest;
 import com.example.videogamesshop.dto.developer.DeveloperCatalogResponse;
 import com.example.videogamesshop.dto.developer.DeveloperCreateRequest;
@@ -19,7 +22,9 @@ import com.example.videogamesshop.entity.Category;
 import com.example.videogamesshop.entity.Developer;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.Publisher;
+import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.exception.DeveloperNotFoundException;
+import com.example.videogamesshop.exception.GameNotFoundException;
 import com.example.videogamesshop.exception.PublisherNotFoundException;
 import com.example.videogamesshop.mapper.DeveloperMapper;
 import com.example.videogamesshop.mapper.GameMapper;
@@ -56,6 +61,9 @@ class DeveloperServiceTest {
 
     @Mock
     private GameMapper gameMapper;
+
+    @Mock
+    private GameCacheService cacheService;
 
     @InjectMocks
     private DeveloperService developerService;
@@ -137,12 +145,23 @@ class DeveloperServiceTest {
     }
 
     @Test
+    void shouldThrowWhenUpdatingMissingDeveloper() {
+        DeveloperUpdateRequest request = new DeveloperUpdateRequest();
+        request.setName("Ghost");
+        when(developerRepository.findById(44L)).thenReturn(Optional.empty());
+
+        assertThrows(DeveloperNotFoundException.class,
+                () -> developerService.updateDeveloper(44L, request));
+    }
+
+    @Test
     void shouldDeleteDeveloper() {
         when(developerRepository.existsById(5L)).thenReturn(true);
 
         developerService.deleteDeveloper(5L);
 
         verify(developerRepository).deleteById(5L);
+        verify(cacheService).clear();
     }
 
     @Test
@@ -200,6 +219,125 @@ class DeveloperServiceTest {
         assertEquals(1, result.getCreatedGamesCount());
         assertEquals("The Witcher 3", result.getGames().get(0).getTitle());
         verify(gameRepository).save(any(Game.class));
+        verify(cacheService).clear();
+    }
+
+    @Test
+    void shouldCreateDeveloperWithGamesWithoutTransaction() {
+        DeveloperCreateRequest developerRequest = new DeveloperCreateRequest();
+        developerRequest.setName("Remedy");
+        developerRequest.setCountry("Finland");
+        developerRequest.setFoundedDate(LocalDate.of(1995, 8, 18));
+
+        DeveloperBulkGameRequest gameRequest = new DeveloperBulkGameRequest();
+        gameRequest.setTitle("Control");
+        gameRequest.setPrice(39.99);
+        gameRequest.setReleaseDate(LocalDate.of(2019, 8, 27));
+        gameRequest.setDescription("Action adventure");
+        gameRequest.setPublisherId(5L);
+        gameRequest.setCategoryIds(List.of(7L));
+
+        Developer savedDeveloper = new Developer();
+        savedDeveloper.setId(9L);
+        Publisher publisher = new Publisher();
+        publisher.setId(5L);
+        Category category = new Category();
+        category.setId(7L);
+
+        DeveloperFullResponse developerResponse = new DeveloperFullResponse();
+        developerResponse.setId(9L);
+        developerResponse.setName("Remedy");
+
+        GameFullResponse gameResponse = new GameFullResponse();
+        gameResponse.setId(15L);
+        gameResponse.setTitle("Control");
+
+        when(developerRepository.save(any(Developer.class))).thenReturn(savedDeveloper);
+        when(publisherRepository.findById(5L)).thenReturn(Optional.of(publisher));
+        when(categoryRepository.findById(7L)).thenReturn(Optional.of(category));
+        when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(gameMapper.toFullResponse(any(Game.class))).thenReturn(gameResponse);
+        when(developerMapper.toFullResponse(savedDeveloper)).thenReturn(developerResponse);
+
+        DeveloperWithGamesResponse result = developerService.createDeveloperWithGamesWithoutTransaction(
+                developerRequest, List.of(gameRequest));
+
+        assertSame(developerResponse, result.getDeveloper());
+        assertEquals(1, result.getCreatedGamesCount());
+        assertEquals("Control", result.getGames().get(0).getTitle());
+        verify(cacheService).clear();
+    }
+
+    @Test
+    void shouldClearCacheWhenWithoutTransactionBulkOperationFailsAfterPartialSave() {
+        DeveloperCreateRequest developerRequest = new DeveloperCreateRequest();
+        developerRequest.setName("Test Transaction Studio");
+        developerRequest.setCountry("Poland");
+        developerRequest.setFoundedDate(LocalDate.of(2020, 1, 10));
+
+        DeveloperBulkGameRequest gameRequest = new DeveloperBulkGameRequest();
+        gameRequest.setTitle("Broken Game");
+        gameRequest.setPrice(39.99);
+        gameRequest.setReleaseDate(LocalDate.of(2024, 2, 1));
+        gameRequest.setDescription("This one should fail");
+        gameRequest.setPublisherId(999L);
+        gameRequest.setCategoryIds(List.of(1L));
+
+        Developer savedDeveloper = new Developer();
+        savedDeveloper.setId(100L);
+
+        when(developerRepository.save(any(Developer.class))).thenReturn(savedDeveloper);
+        when(publisherRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(PublisherNotFoundException.class,
+                () -> developerService.createDeveloperWithGamesWithoutTransaction(
+                        developerRequest, List.of(gameRequest)));
+
+        verify(cacheService).clear();
+    }
+
+    @Test
+    void shouldNotClearCacheWhenWithTransactionBulkOperationFails() {
+        DeveloperCreateRequest developerRequest = new DeveloperCreateRequest();
+        developerRequest.setName("Tx Studio");
+        developerRequest.setCountry("Poland");
+        developerRequest.setFoundedDate(LocalDate.of(2020, 1, 10));
+
+        DeveloperBulkGameRequest gameRequest = new DeveloperBulkGameRequest();
+        gameRequest.setTitle("Broken Game");
+        gameRequest.setPrice(39.99);
+        gameRequest.setReleaseDate(LocalDate.of(2024, 2, 1));
+        gameRequest.setDescription("This one should fail");
+        gameRequest.setPublisherId(999L);
+        gameRequest.setCategoryIds(List.of(1L));
+
+        Developer savedDeveloper = new Developer();
+        savedDeveloper.setId(101L);
+
+        when(developerRepository.save(any(Developer.class))).thenReturn(savedDeveloper);
+        when(publisherRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(PublisherNotFoundException.class,
+                () -> developerService.createDeveloperWithGamesWithTransaction(
+                        developerRequest, List.of(gameRequest)));
+
+        verify(cacheService, never()).clear();
+    }
+
+    @Test
+    void shouldNotClearCacheWhenWithoutTransactionFailsBeforeAnySave() {
+        DeveloperCreateRequest developerRequest = new DeveloperCreateRequest();
+        developerRequest.setName("Early Failure Studio");
+        developerRequest.setCountry("Poland");
+        developerRequest.setFoundedDate(LocalDate.of(2020, 1, 10));
+
+        when(developerRepository.save(any(Developer.class))).thenThrow(new RuntimeException("db down"));
+
+        assertThrows(RuntimeException.class,
+                () -> developerService.createDeveloperWithGamesWithoutTransaction(
+                        developerRequest, List.of(new DeveloperBulkGameRequest())));
+
+        verify(cacheService, never()).clear();
     }
 
     @Test
@@ -226,6 +364,36 @@ class DeveloperServiceTest {
         assertThrows(PublisherNotFoundException.class,
                 () -> developerService.createDeveloperWithGamesWithoutTransaction(
                         developerRequest, gameRequests));
+        verify(cacheService).clear();
+    }
+
+    @Test
+    void shouldThrowWhenCategoryMissingInBulkOperation() {
+        DeveloperCreateRequest developerRequest = new DeveloperCreateRequest();
+        developerRequest.setName("Valve");
+        developerRequest.setCountry("USA");
+        developerRequest.setFoundedDate(LocalDate.of(1996, 8, 24));
+
+        DeveloperBulkGameRequest gameRequest = new DeveloperBulkGameRequest();
+        gameRequest.setTitle("Portal");
+        gameRequest.setPrice(9.99);
+        gameRequest.setReleaseDate(LocalDate.of(2007, 10, 10));
+        gameRequest.setDescription("Puzzle");
+        gameRequest.setPublisherId(2L);
+        gameRequest.setCategoryIds(List.of(404L));
+
+        Developer savedDeveloper = new Developer();
+        savedDeveloper.setId(1L);
+        Publisher publisher = new Publisher();
+        publisher.setId(2L);
+
+        when(developerRepository.save(any(Developer.class))).thenReturn(savedDeveloper);
+        when(publisherRepository.findById(2L)).thenReturn(Optional.of(publisher));
+        when(categoryRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThrows(CategoryNotFoundException.class,
+                () -> developerService.createDeveloperWithGamesWithTransaction(
+                        developerRequest, List.of(gameRequest)));
     }
 
     @Test
@@ -241,6 +409,18 @@ class DeveloperServiceTest {
 
         assertEquals(1, developer.getGames().size());
         assertSame(developer, game.getDeveloper());
+        verify(cacheService).clear();
+    }
+
+    @Test
+    void shouldThrowWhenAttachingMissingGameToDeveloper() {
+        Developer developer = new Developer();
+        developer.setId(1L);
+        when(developerRepository.findById(1L)).thenReturn(Optional.of(developer));
+        when(gameRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(GameNotFoundException.class,
+                () -> developerService.addGameToDeveloper(1L, 99L));
     }
 
     @Test
@@ -257,5 +437,6 @@ class DeveloperServiceTest {
 
         assertEquals(0, developer.getGames().size());
         assertNull(game.getDeveloper());
+        verify(cacheService).clear();
     }
 }

@@ -7,12 +7,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.videogamesshop.cache.GameCacheService;
 import com.example.videogamesshop.dto.user.UserCreateRequest;
 import com.example.videogamesshop.dto.user.UserFullResponse;
 import com.example.videogamesshop.dto.user.UserShortResponse;
 import com.example.videogamesshop.dto.user.UserUpdateRequest;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.User;
+import com.example.videogamesshop.exception.GameNotFoundException;
 import com.example.videogamesshop.exception.UserNotFoundException;
 import com.example.videogamesshop.repository.GameRepository;
 import com.example.videogamesshop.repository.UserRepository;
@@ -32,6 +34,9 @@ class UserServiceTest {
 
     @Mock
     private GameRepository gameRepository;
+
+    @Mock
+    private GameCacheService cacheService;
 
     @InjectMocks
     private UserService userService;
@@ -105,6 +110,17 @@ class UserServiceTest {
 
         assertEquals(1, user.getGames().size());
         assertSame(user, game.getLibraries().iterator().next());
+        verify(cacheService).clear();
+    }
+
+    @Test
+    void shouldThrowWhenAddingMissingGameToUser() {
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(gameRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(GameNotFoundException.class, () -> userService.addGameToUser(1L, 99L));
     }
 
     @Test
@@ -121,6 +137,14 @@ class UserServiceTest {
 
         assertEquals(0, user.getGames().size());
         assertEquals(0, game.getLibraries().size());
+        verify(cacheService).clear();
+    }
+
+    @Test
+    void shouldThrowWhenRemovingGameFromMissingUser() {
+        when(userRepository.findById(77L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.removeGameFromUser(77L, 5L));
     }
 
     @Test
@@ -136,6 +160,7 @@ class UserServiceTest {
 
         assertEquals(0, game.getLibraries().size());
         verify(userRepository).delete(user);
+        verify(cacheService).clear();
     }
 
     @Test
@@ -143,5 +168,12 @@ class UserServiceTest {
         when(userRepository.findById(50L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getUserById(50L));
+    }
+
+    @Test
+    void shouldThrowWhenDeletingMissingUser() {
+        when(userRepository.findById(51L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.deleteUser(51L));
     }
 }

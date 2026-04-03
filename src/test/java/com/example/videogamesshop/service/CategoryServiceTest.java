@@ -118,4 +118,22 @@ class CategoryServiceTest {
         assertThrows(CategoryNotFoundException.class,
                 () -> categoryService.getCategoryById(100L));
     }
+
+    @Test
+    void shouldThrowWhenUpdatingMissingCategory() {
+        CategoryCreateRequest request = new CategoryCreateRequest();
+        request.setName("Missing");
+        when(categoryRepository.findById(101L)).thenReturn(Optional.empty());
+
+        assertThrows(CategoryNotFoundException.class,
+                () -> categoryService.updateCategory(101L, request));
+    }
+
+    @Test
+    void shouldThrowWhenDeletingMissingCategory() {
+        when(categoryRepository.findById(102L)).thenReturn(Optional.empty());
+
+        assertThrows(CategoryNotFoundException.class,
+                () -> categoryService.deleteCategory(102L));
+    }
 }

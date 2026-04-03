@@ -104,6 +104,16 @@ class PublisherServiceTest {
     }
 
     @Test
+    void shouldThrowWhenUpdatingMissingPublisher() {
+        PublisherCreateRequest request = new PublisherCreateRequest();
+        request.setName("Missing");
+        when(publisherRepository.findById(100L)).thenReturn(Optional.empty());
+
+        assertThrows(PublisherNotFoundException.class,
+                () -> publisherService.updatePublisher(100L, request));
+    }
+
+    @Test
     void shouldThrowWhenDeletingMissingPublisher() {
         when(publisherRepository.existsById(10L)).thenReturn(false);
 
