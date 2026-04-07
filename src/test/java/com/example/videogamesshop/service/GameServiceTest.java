@@ -352,24 +352,28 @@ class GameServiceTest {
         Game game = new Game();
         game.setId(1L);
         Developer developer = new Developer();
-        developer.getGames().add(game);
-        game.setDeveloper(developer);
+        developer.addGame(game);
+
+        Publisher publisher = new Publisher();
+        publisher.addGame(game);
 
         Category category = new Category();
         category.setGames(new HashSet<>(Set.of(game)));
         game.setCategories(new HashSet<>(Set.of(category)));
 
         User user = new User();
-        user.getGames().add(game);
-        game.setLibraries(new HashSet<>(Set.of(user)));
+        user.addGame(game);
 
         when(gameRepository.findById(1L)).thenReturn(Optional.of(game));
 
         gameService.deleteGame(1L);
 
         assertEquals(0, developer.getGames().size());
+        assertEquals(0, publisher.getGames().size());
         assertEquals(0, category.getGames().size());
         assertEquals(0, user.getGames().size());
+        assertEquals(0, game.getLibraries().size());
+        assertEquals(0, game.getCategories().size());
         verify(gameRepository).delete(game);
         verify(cacheService).clear();
     }
@@ -416,3 +420,4 @@ class GameServiceTest {
         assertEquals(4L, result.get(0).getId());
     }
 }
+

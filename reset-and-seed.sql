@@ -132,4 +132,38 @@ INSERT INTO user_game (user_id, game_id) VALUES
     (4, 3), (4, 4), (4, 10),
     (5, 1), (5, 7), (5, 8);
 
+-- Sync PostgreSQL sequences with actual max(id) in tables
+-- Safe for both non-empty and empty tables
+
+SELECT setval(
+               pg_get_serial_sequence('developers', 'id'),
+               COALESCE((SELECT MAX(id) FROM developers), 1),
+               (SELECT MAX(id) IS NOT NULL FROM developers)
+       );
+
+SELECT setval(
+               pg_get_serial_sequence('publishers', 'id'),
+               COALESCE((SELECT MAX(id) FROM publishers), 1),
+               (SELECT MAX(id) IS NOT NULL FROM publishers)
+       );
+
+SELECT setval(
+               pg_get_serial_sequence('categories', 'id'),
+               COALESCE((SELECT MAX(id) FROM categories), 1),
+               (SELECT MAX(id) IS NOT NULL FROM categories)
+       );
+
+SELECT setval(
+               pg_get_serial_sequence('games', 'id'),
+               COALESCE((SELECT MAX(id) FROM games), 1),
+               (SELECT MAX(id) IS NOT NULL FROM games)
+       );
+
+SELECT setval(
+               pg_get_serial_sequence('users', 'id'),
+               COALESCE((SELECT MAX(id) FROM users), 1),
+               (SELECT MAX(id) IS NOT NULL FROM users)
+       );
+
+
 COMMIT;

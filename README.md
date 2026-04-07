@@ -169,3 +169,18 @@
 - Аналогичные методы для других сущностей.
 
 Это позволяет сократить количество запросов к БД и повысить производительность.
+
+## Async jobs, concurrency demo and load testing
+
+The project now contains additional demo endpoints for concurrency topics:
+
+- `POST /async-jobs/catalog-report` � starts an asynchronous business operation and returns `taskId`
+- `GET /async-jobs/{taskId}` � returns async job status
+- `POST /counter/increment`, `GET /counter`, `POST /counter/reset` � thread-safe counter based on `AtomicLong`
+- `POST /concurrency/race-condition/unsafe` � demonstrates race condition with 50+ threads
+- `POST /concurrency/race-condition/safe` � demonstrates the fixed version based on atomic increments
+
+Load-testing assets are stored in `perf/`:
+
+- `perf/video-games-shop-all-endpoints.jmx` � JMeter plan covering all REST endpoints in the project
+- `perf/jmeter-results.md` � run instructions and results template

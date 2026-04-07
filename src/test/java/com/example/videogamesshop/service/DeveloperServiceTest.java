@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +21,7 @@ import com.example.videogamesshop.entity.Category;
 import com.example.videogamesshop.entity.Developer;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.Publisher;
+import com.example.videogamesshop.entity.User;
 import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.exception.DeveloperNotFoundException;
 import com.example.videogamesshop.exception.GameNotFoundException;
@@ -156,17 +156,19 @@ class DeveloperServiceTest {
 
     @Test
     void shouldDeleteDeveloper() {
-        when(developerRepository.existsById(5L)).thenReturn(true);
+        Developer developer = new Developer();
+        developer.setId(5L);
+        when(developerRepository.findById(5L)).thenReturn(Optional.of(developer));
 
         developerService.deleteDeveloper(5L);
 
-        verify(developerRepository).deleteById(5L);
+        verify(developerRepository).delete(developer);
         verify(cacheService).clear();
     }
 
     @Test
     void shouldThrowWhenDeletingMissingDeveloper() {
-        when(developerRepository.existsById(6L)).thenReturn(false);
+        when(developerRepository.findById(6L)).thenReturn(Optional.empty());
 
         assertThrows(DeveloperNotFoundException.class,
                 () -> developerService.deleteDeveloper(6L));
@@ -429,6 +431,18 @@ class DeveloperServiceTest {
         developer.setId(7L);
         Game game = new Game();
         game.setId(8L);
+        Publisher publisher = new Publisher();
+        publisher.setId(3L);
+        publisher.getGames().add(game);
+        game.setPublisher(publisher);
+        Category category = new Category();
+        category.setId(4L);
+        category.getGames().add(game);
+        game.getCategories().add(category);
+        User user = new User();
+        user.setId(9L);
+        user.getGames().add(game);
+        game.getLibraries().add(user);
         developer.addGame(game);
         when(developerRepository.findById(7L)).thenReturn(Optional.of(developer));
         when(gameRepository.findById(8L)).thenReturn(Optional.of(game));
@@ -437,6 +451,34 @@ class DeveloperServiceTest {
 
         assertEquals(0, developer.getGames().size());
         assertNull(game.getDeveloper());
+        assertNull(game.getPublisher());
+        assertEquals(0, category.getGames().size());
+        assertEquals(0, user.getGames().size());
+        assertEquals(0, game.getLibraries().size());
+        verify(cacheService).clear();
+    }
+    @Test
+    void shouldDeleteDeveloperAndDetachGamesFromUserLibraries() {
+        Developer developer = new Developer();
+        developer.setId(11L);
+
+        Game game = new Game();
+        game.setId(12L);
+
+        User user = new User();
+        user.setId(13L);
+        user.addGame(game);
+
+        developer.addGame(game);
+
+        when(developerRepository.findById(11L)).thenReturn(Optional.of(developer));
+
+        developerService.deleteDeveloper(11L);
+
+        assertEquals(0, developer.getGames().size());
+        assertEquals(0, user.getGames().size());
+        assertEquals(0, game.getLibraries().size());
+        verify(developerRepository).delete(developer);
         verify(cacheService).clear();
     }
 }

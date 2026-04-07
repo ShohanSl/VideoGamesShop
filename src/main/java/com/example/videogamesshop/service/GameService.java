@@ -125,13 +125,18 @@ public class GameService {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new GameNotFoundException(id));
         if (game.getDeveloper() != null) {
-            game.getDeveloper().getGames().remove(game);
+            game.getDeveloper().removeGame(game);
+        }
+        if (game.getPublisher() != null) {
+            game.getPublisher().removeGame(game);
         }
         if (game.getCategories() != null) {
-            game.getCategories().forEach(cat -> cat.getGames().remove(game));
+            Set<Category> categories = Set.copyOf(game.getCategories());
+            categories.forEach(cat -> cat.getGames().remove(game));
+            game.getCategories().clear();
         }
-        for (User user : game.getLibraries()) {
-            user.getGames().remove(game);
+        for (User user : Set.copyOf(game.getLibraries())) {
+            user.removeGame(game);
         }
         gameRepository.delete(game);
         cacheService.clear();

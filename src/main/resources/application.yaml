@@ -1,15 +1,23 @@
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 400
+      min-spare: 50
+    max-connections: 10000
+    accept-count: 1000
+    connection-timeout: 5s
+    keep-alive-timeout: 20s
 
 spring:
-
   application:
     name: video_games_shop
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         show_sql: false
@@ -20,6 +28,15 @@ spring:
     url: jdbc:postgresql://localhost:5432/videogames_shop
     username: postgres
     password: ${DB_PASSWORD}
+    hikari:
+      pool-name: VideoGamesShopHikariPool
+      minimum-idle: 20
+      maximum-pool-size: 80
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 2000
+      validation-timeout: 1000
+      keepalive-time: 300000
 
 springdoc:
   api-docs:

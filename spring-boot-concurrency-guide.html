@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Boot: потоки, асинхронность, нагрузка и наблюдаемость</title>
+    <style>
+        :root {
+            --bg: #f4efe7;
+            --paper: #fffdf9;
+            --paper-soft: #f8f4ec;
+            --ink: #1f2933;
+            --muted: #52606d;
+            --line: #d9d0c3;
+            --brand: #a44a3f;
+            --brand-deep: #7f3026;
+            --brand-soft: #f7ddd6;
+            --warn: #b7791f;
+            --code-bg: #18212b;
+            --code-fg: #f8fafc;
+            --shadow: 0 20px 50px rgba(48, 35, 25, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(164, 74, 63, 0.10), transparent 24%),
+                radial-gradient(circle at top right, rgba(127, 48, 38, 0.08), transparent 20%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.94)),
+                var(--bg);
+        }
+
+        a { color: var(--brand-deep); }
+        code { font-family: Consolas, "Courier New", monospace; }
+
+        .container {
+            width: min(1240px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 28px 0 64px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #5f211b, #a44a3f 58%, #cf7c58);
+            color: #fff8f4;
+            border-radius: 32px;
+            padding: 38px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -10% -35% auto;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 65%);
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 248, 244, 0.18);
+            font-size: 0.84rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            margin: 0 0 14px;
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            line-height: 1.08;
+            max-width: 900px;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 920px;
+            line-height: 1.75;
+            color: rgba(255, 248, 244, 0.93);
+            font-size: 1.05rem;
+        }
+
+        .hero-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .hero-summary div {
+            background: rgba(255, 255, 255, 0.13);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        .hero-summary strong {
+            display: block;
+            font-size: 1.45rem;
+            margin-bottom: 4px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+            gap: 22px;
+            margin-top: 24px;
+            align-items: start;
+        }
+
+        .toc,
+        .section {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+        }
+
+        .toc {
+            position: sticky;
+            top: 16px;
+            border-radius: 26px;
+            padding: 24px;
+        }
+
+        .toc h2 { margin: 0 0 14px; font-size: 1.15rem; }
+        .toc ol { margin: 0; padding-left: 18px; }
+        .toc li { margin: 10px 0; color: var(--muted); line-height: 1.5; }
+        .toc a { text-decoration: none; }
+        .content { display: grid; gap: 22px; }
+
+        .section {
+            border-radius: 28px;
+            padding: 28px;
+        }
+
+        .section h2 { margin: 0 0 14px; font-size: 1.7rem; }
+        .section h3 { margin: 20px 0 10px; font-size: 1.08rem; }
+        .section p, .section li, .section td { color: var(--muted); line-height: 1.72; }
+        .section ul { margin: 12px 0 0; padding-left: 22px; }
+
+        .label {
+            display: inline-block;
+            margin-bottom: 14px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: var(--brand-soft);
+            color: var(--brand-deep);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .grid-2, .grid-3 {
+            display: grid;
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+        .note, .mini-card, .callout {
+            border-radius: 22px;
+            padding: 18px;
+        }
+
+        .mini-card { background: var(--paper-soft); border: 1px solid #e5dccf; }
+        .note { background: #fdf8ef; border: 1px solid #ecd8b3; }
+        .callout { background: #f5fbf7; border: 1px solid #cfe7d7; }
+        .note strong, .callout strong, .mini-card strong { color: var(--ink); }
+
+        .compare {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            overflow: hidden;
+            border-radius: 18px;
+        }
+
+        .compare th, .compare td {
+            padding: 14px;
+            border: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .compare th { background: #fbf1ec; color: var(--ink); }
+
+        .timeline {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .timeline-item {
+            display: grid;
+            grid-template-columns: 140px minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+            background: var(--paper-soft);
+            border: 1px solid #e7ddd1;
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        .timeline-item strong { color: var(--brand-deep); }
+
+        pre {
+            margin: 16px 0 0;
+            padding: 18px;
+            border-radius: 20px;
+            overflow-x: auto;
+            background: var(--code-bg);
+            color: var(--code-fg);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0;
+        }
+
+        .checklist li {
+            position: relative;
+            padding-left: 28px;
+            margin: 12px 0;
+        }
+
+        .checklist li::before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            top: 0;
+            color: var(--brand);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .footer {
+            margin-top: 22px;
+            background: #2a211f;
+            color: rgba(255, 247, 240, 0.88);
+            border-radius: 26px;
+            padding: 24px 28px;
+        }
+
+        .footer p { margin: 10px 0 0; line-height: 1.7; }
+        .warn { color: var(--warn); font-weight: 700; }
+
+        @media (max-width: 960px) {
+            .layout { grid-template-columns: 1fr; }
+            .toc { position: static; }
+        }
+
+        @media (max-width: 640px) {
+            .container { width: min(100% - 16px, 100%); padding-top: 16px; padding-bottom: 36px; }
+            .hero, .toc, .section, .footer { border-radius: 22px; }
+            .hero, .section, .toc, .footer { padding: 20px; }
+            .timeline-item { grid-template-columns: 1fr; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <section class="hero">
+        <div class="eyebrow">Spring Boot • Backend Engineering Guide</div>
+        <h1>Потоки, асинхронность, нагрузка и наблюдаемость в Spring Boot приложении</h1>
+        <p>Эта страница собрана как самостоятельный конспект-практикум: что такое процесс и поток, откуда берутся race condition и deadlock, как правильно запускать асинхронную работу в Spring Boot, где нужны <code>volatile</code> и <code>synchronized</code>, как использовать <code>CompletableFuture</code>, чем измерять производительность, зачем ставить <code>RateLimiter</code> и как связать логи приложения с ELK-стеком.</p>
+        <div class="hero-summary">
+            <div><strong>8</strong> ключевых тем с примерами кода и архитектурными пояснениями</div>
+            <div><strong>Spring Boot</strong> фокус на реальном backend-сервисе, а не на абстрактной теории</div>
+            <div><strong>Практика</strong> рекомендации, ошибки, сценарии для собеседования и разработки</div>
+        </div>
+    </section>
+
+    <div class="layout">
+        <aside class="toc">
+            <h2>Оглавление</h2>
+            <ol>
+                <li><a href="#threads-processes">Потоки и процессы</a></li>
+                <li><a href="#runtime-components">Компоненты выполнения Spring Boot</a></li>
+                <li><a href="#state-and-safety">Состояние и потокобезопасность</a></li>
+                <li><a href="#race-deadlock">Race condition и deadlock</a></li>
+                <li><a href="#thread-creation">Создание потока</a></li>
+                <li><a href="#volatile-sync">volatile и synchronized</a></li>
+                <li><a href="#completable-future">CompletableFuture</a></li>
+                <li><a href="#load-testing">Нагрузочное тестирование</a></li>
+                <li><a href="#jmeter">JMeter</a></li>
+                <li><a href="#rate-limiter">RateLimiter</a></li>
+                <li><a href="#elk">ELK стек</a></li>
+                <li><a href="#interview-map">Как связать все темы в одном проекте</a></li>
+            </ol>
+        </aside>
+
+        <main class="content">
+            <section class="section" id="threads-processes">
+                <div class="label">1. Основа конкурентности</div>
+                <h2>Потоки и процессы</h2>
+                <p><strong>Процесс</strong> — это отдельный экземпляр программы со своим адресным пространством, памятью, файловыми дескрипторами и системными ресурсами. Когда мы запускаем Spring Boot приложение, обычно создается один Java-процесс JVM.</p>
+                <p><strong>Поток</strong> — это путь выполнения внутри процесса. Все потоки одного процесса делят общую память heap, общие singleton-бины Spring, кэш, соединения и другие разделяемые объекты. Именно из-за общего доступа и возникают проблемы синхронизации.</p>
+                <div class="grid-2">
+                    <div class="mini-card">
+                        <strong>В контексте Spring Boot</strong>
+                        <ul>
+                            <li>HTTP-запросы чаще всего обрабатываются потоками пула Tomcat/Jetty/Undertow.</li>
+                            <li><code>@Async</code> запускает работу в отдельном executor-пуле.</li>
+                            <li>Планировщик <code>@Scheduled</code> использует свои потоки.</li>
+                            <li>Kafka consumers, batch jobs, WebSocket handlers тоже используют конкурентное выполнение.</li>
+                        </ul>
+                    </div>
+                    <div class="mini-card">
+                        <strong>Что важно помнить</strong>
+                        <ul>
+                            <li>Spring singleton не означает "однопоточный".</li>
+                            <li>Любой сервис может одновременно вызываться десятками запросов.</li>
+                            <li>Статические поля и изменяемое состояние в бинах особенно опасны.</li>
+                            <li>Проблемы часто проявляются только под нагрузкой, а не локально.</li>
+                        </ul>
+                    </div>
+                </div>
+                <table class="compare">
+                    <thead>
+                    <tr><th>Критерий</th><th>Процесс</th><th>Поток</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>Память</td><td>Изолированная</td><td>Общая внутри процесса</td></tr>
+                    <tr><td>Создание</td><td>Дороже</td><td>Дешевле</td></tr>
+                    <tr><td>Обмен данными</td><td>Через IPC, сокеты, файлы, брокеры</td><td>Через общие объекты и память</td></tr>
+                    <tr><td>Риск повреждения данных</td><td>Ниже из-за изоляции</td><td>Выше без синхронизации</td></tr>
+                    </tbody>
+                </table>
+                <div class="note"><strong>Типичный вопрос на практике:</strong> если у вас есть сервис корзины или счетчика просмотров, то каждый входящий HTTP-запрос может прийти на отдельном потоке. Значит, любой общий mutable state должен быть защищен или вынесен во внешнее хранилище.</div>
+            </section>
+
+            <section class="section" id="runtime-components">
+                <div class="label">1A. Отдельные runtime-пункты</div>
+                <h2>Tomcat, Jetty, Undertow, @Async, @Scheduled, Kafka, batch, WebSocket</h2>
+                <div class="grid-2">
+                    <div class="mini-card" id="tomcat-jetty-undertow">
+                        <strong>Tomcat / Jetty / Undertow</strong>
+                        <p>Это встроенные web-серверы Spring Boot. Они принимают HTTP-запросы и раздают их по рабочим потокам. На практике это значит: если одновременно пришло 100 запросов, они конкурируют за ограниченный thread pool сервера и за ресурсы приложения.</p>
+                    </div>
+                    <div class="mini-card" id="async">
+                        <strong>@Async</strong>
+                        <p>Аннотация для запуска метода в отдельном executor-пуле. Удобна для фоновых задач, уведомлений, интеграций и параллельных запросов, но требует явной настройки пула и понимания, что общий mutable state никуда не исчезает.</p>
+                    </div>
+                    <div class="mini-card" id="scheduled">
+                        <strong>@Scheduled</strong>
+                        <p>Позволяет периодически запускать задачи по cron или fixed delay. Важно помнить, что планировщик тоже использует потоки, а значит задачи могут пересекаться по времени и создавать гонки за общие данные.</p>
+                    </div>
+                    <div class="mini-card" id="kafka-consumers">
+                        <strong>Kafka consumers</strong>
+                        <p>Консьюмеры читают сообщения параллельно по partition'ам и потокам listener-контейнера. Здесь часто всплывают race condition, повторная обработка, идемпотентность и борьба за доступ к БД или кэшу.</p>
+                    </div>
+                    <div class="mini-card" id="batch-jobs">
+                        <strong>Batch jobs</strong>
+                        <p>Пакетные задачи обрабатывают большие объемы данных по расписанию или вручную. Если они идут параллельно с web-трафиком, нужно следить за конкуренцией за connection pool, CPU, память и блокировки в БД.</p>
+                    </div>
+                    <div class="mini-card" id="websocket-handlers">
+                        <strong>WebSocket handlers</strong>
+                        <p>Обработчики WebSocket работают с долгоживущими соединениями и событиями в реальном времени. Из-за большого числа одновременных сессий особенно опасно хранить небезопасное состояние в singleton-бинах или обычных коллекциях.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="state-and-safety">
+                <div class="label">1B. Отдельные пункты по безопасности данных</div>
+                <h2>Mutable state, synchronized, atomic, race condition, ExecutorService</h2>
+                <div class="grid-2">
+                    <div class="mini-card" id="mutable-state">
+                        <strong>Mutable state</strong>
+                        <p>Изменяемое состояние — это любые поля, коллекции и счетчики, которые можно менять после создания объекта. В Spring Boot это самый частый источник проблем, если такое состояние лежит в singleton-сервисе и доступно нескольким потокам.</p>
+                    </div>
+                    <div class="mini-card" id="synchronized-point">
+                        <strong>synchronized</strong>
+                        <p>Нужен, когда важно не просто увидеть новое значение, а защитить целую критическую секцию: проверку, изменение и сохранение инварианта как одну неделимую операцию.</p>
+                    </div>
+                    <div class="mini-card" id="atomic">
+                        <strong>Atomic</strong>
+                        <p>Классы вроде <code>AtomicInteger</code>, <code>AtomicLong</code> и <code>AtomicReference</code> дают lock-free операции для простых сценариев: инкремента, compare-and-set, публикации ссылки. Это удобнее, чем <code>synchronized</code>, когда нужно защитить одну атомарную переменную, а не сложный блок логики.</p>
+                    </div>
+                    <div class="mini-card" id="race-condition-point">
+                        <strong>Race condition</strong>
+                        <p>Гонка возникает, когда несколько потоков читают и меняют общие данные без согласованности. Итог зависит от порядка исполнения, который нельзя надежно предсказать, особенно под нагрузкой.</p>
+                    </div>
+                    <div class="mini-card" id="executor-service">
+                        <strong>ExecutorService</strong>
+                        <p>Это базовый Java-механизм для управления пулом потоков и очередью задач. В Spring Boot его идея обычно живет через <code>ThreadPoolTaskExecutor</code>, но знать <code>ExecutorService</code> важно, потому что он объясняет, почему ручной <code>new Thread()</code> почти всегда хуже.</p>
+                    </div>
+                    <div class="mini-card" id="completable-future-point">
+                        <strong>CompletableFuture</strong>
+                        <p>Это отдельный инструмент поверх executor'ов для композиции нескольких асинхронных шагов. Он особенно полезен, когда надо не просто "запустить фон", а собрать результат из нескольких параллельных источников.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="race-deadlock">
+                <div class="label">2. Классические проблемы</div>
+                <h2>Race condition и deadlock</h2>
+                <p><strong>Race condition</strong> возникает, когда итог зависит от непредсказуемого порядка выполнения потоков. Несколько потоков читают и меняют общее состояние без корректной координации.</p>
+                <pre><code>public class InventoryService {
+    private int stock = 10;
+
+    public void reserve() {
+        if (stock &gt; 0) {
+            stock--;
+        }
+    }
+}</code></pre>
+                <p>Здесь два потока могут одновременно увидеть <code>stock &gt; 0</code> и оба уменьшить значение. В результате инварианты ломаются: можно продать больше товаров, чем есть в наличии.</p>
+                <div class="grid-2">
+                    <div class="mini-card">
+                        <strong>Как race condition проявляется в Spring Boot</strong>
+                        <ul>
+                            <li>Двойное списание денег при параллельной оплате.</li>
+                            <li>Дублирование заказа при повторной отправке запроса.</li>
+                            <li>Неконсистентный кэш в singleton-сервисе.</li>
+                            <li>Повторная генерация одинакового номера документа.</li>
+                        </ul>
+                    </div>
+                    <div class="callout">
+                        <strong>Защита</strong>
+                        <ul>
+                            <li><code>synchronized</code>, <code>Lock</code>, атомики, concurrent-коллекции.</li>
+                            <li>Транзакции и блокировки на уровне БД.</li>
+                            <li>Идемпотентность запросов.</li>
+                            <li>Вынос критического состояния в внешнее хранилище.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Deadlock</h3>
+                <p><strong>Deadlock</strong> — это взаимная блокировка, когда поток A ждет ресурс, захваченный потоком B, а поток B одновременно ждет ресурс, захваченный потоком A. Никто не может продолжить выполнение.</p>
+                <pre><code>private final Object lockA = new Object();
+private final Object lockB = new Object();
+
+public void method1() {
+    synchronized (lockA) {
+        synchronized (lockB) {
+            // work
+        }
+    }
+}
+
+public void method2() {
+    synchronized (lockB) {
+        synchronized (lockA) {
+            // work
+        }
+    }
+}</code></pre>
+                <div class="timeline">
+                    <div class="timeline-item"><strong>Шаг 1</strong><div>Поток T1 вошел в <code>method1()</code> и захватил <code>lockA</code>.</div></div>
+                    <div class="timeline-item"><strong>Шаг 2</strong><div>Поток T2 вошел в <code>method2()</code> и захватил <code>lockB</code>.</div></div>
+                    <div class="timeline-item"><strong>Шаг 3</strong><div>T1 ждет <code>lockB</code>, а T2 ждет <code>lockA</code>.</div></div>
+                    <div class="timeline-item"><strong>Итог</strong><div>Оба потока зависли. Под нагрузкой это выглядит как "приложение перестало отвечать".</div></div>
+                </div>
+                <ul class="checklist">
+                    <li>Всегда придерживайтесь единого порядка захвата локов.</li>
+                    <li>Минимизируйте размер критической секции.</li>
+                    <li>Избегайте вложенных блокировок без необходимости.</li>
+                    <li>Для БД следите за порядком обновления таблиц и строк в транзакциях.</li>
+                </ul>
+            </section>
+
+            <section class="section" id="thread-creation">
+                <div class="label">3. Запуск параллельной работы</div>
+                <h2>Создание потока</h2>
+                <p>В Java поток можно создать через <code>Thread</code>, <code>Runnable</code>, <code>Callable</code> и <code>ExecutorService</code>. Но в Spring Boot прямое создание потока через <code>new Thread(...)</code> почти всегда считается плохой практикой для бизнес-кода.</p>
+                <table class="compare">
+                    <thead>
+                    <tr><th>Подход</th><th>Когда использовать</th><th>Комментарий</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td><code>new Thread()</code></td><td>Почти никогда в Spring Boot</td><td>Нет управления пулом, мониторинга, лимитов и graceful shutdown.</td></tr>
+                    <tr><td><code>ExecutorService</code></td><td>Базовая Java-конкурентность</td><td>Лучше, чем ручные потоки, но в Spring обычно удобнее объявить бин executor.</td></tr>
+                    <tr><td><code>@Async</code></td><td>Асинхронные сервисные операции</td><td>Стандартный путь для Spring Boot при корректной настройке пула.</td></tr>
+                    <tr><td><code>CompletableFuture</code></td><td>Композиция нескольких async-операций</td><td>Хорош для fan-out/fan-in сценариев и объединения результатов.</td></tr>
+                    </tbody>
+                </table>
+                <h3>Плохой пример</h3>
+                <pre><code>@Service
+public class ReportService {
+    public void buildReport() {
+        new Thread(() -&gt; heavyJob()).start();
+    }
+}</code></pre>
+                <h3>Лучше через управляемый executor</h3>
+                <pre><code>@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    @Bean(name = "reportExecutor")
+    public Executor reportExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("report-");
+        executor.initialize();
+        return executor;
+    }
+}
+
+@Service
+public class ReportService {
+
+    @Async("reportExecutor")
+    public CompletableFuture&lt;String&gt; buildReport() {
+        heavyJob();
+        return CompletableFuture.completedFuture("done");
+    }
+}</code></pre>
+                <div class="note"><strong>Почему это лучше:</strong> пул потоков ограничивает конкуренцию, упрощает мониторинг, позволяет контролировать очередь, размер пула и выключение приложения.</div>
+            </section>
+            <section class="section" id="volatile-sync">
+                <div class="label">4. Видимость и взаимное исключение</div>
+                <h2>volatile и synchronized</h2>
+                <h3><code>volatile</code></h3>
+                <p><code>volatile</code> гарантирует <strong>видимость</strong> изменений переменной между потоками. Если один поток записал новое значение в volatile-поле, другие потоки увидят его без кэширования в устаревшем состоянии.</p>
+                <pre><code>public class FeatureFlagHolder {
+    private volatile boolean maintenanceMode;
+
+    public boolean isMaintenanceMode() {
+        return maintenanceMode;
+    }
+
+    public void setMaintenanceMode(boolean maintenanceMode) {
+        this.maintenanceMode = maintenanceMode;
+    }
+}</code></pre>
+                <p>Это хороший вариант для флага, сигнала остановки, режима конфигурации. Но <code>volatile</code> <span class="warn">не делает составные операции атомарными</span>.</p>
+                <pre><code>private volatile int counter = 0;
+
+public void increment() {
+    counter++; // не атомарно: read - modify - write
+}</code></pre>
+                <h3><code>synchronized</code></h3>
+                <p><code>synchronized</code> обеспечивает взаимное исключение: только один поток может зайти в критическую секцию на данном мониторе. Дополнительно он обеспечивает и корректную публикацию изменений памяти при входе и выходе из блока.</p>
+                <pre><code>public class SequenceService {
+    private int current = 0;
+
+    public synchronized int next() {
+        current++;
+        return current;
+    }
+}</code></pre>
+                <div class="grid-2">
+                    <div class="mini-card">
+                        <strong>Когда подходит <code>volatile</code></strong>
+                        <ul>
+                            <li>Флаг включения/выключения.</li>
+                            <li>Признак завершения фоновой задачи.</li>
+                            <li>Редко изменяемая ссылка на конфигурационный объект.</li>
+                        </ul>
+                    </div>
+                    <div class="mini-card">
+                        <strong>Когда нужен <code>synchronized</code></strong>
+                        <ul>
+                            <li>Инкремент счетчика.</li>
+                            <li>Проверка и изменение в одном блоке.</li>
+                            <li>Защита нескольких связанных полей.</li>
+                        </ul>
+                    </div>
+                </div>
+                <table class="compare">
+                    <thead>
+                    <tr><th>Свойство</th><th><code>volatile</code></th><th><code>synchronized</code></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>Видимость изменений</td><td>Да</td><td>Да</td></tr>
+                    <tr><td>Атомарность составной операции</td><td>Нет</td><td>Да</td></tr>
+                    <tr><td>Блокировка других потоков</td><td>Нет</td><td>Да</td></tr>
+                    <tr><td>Типичный кейс</td><td>Флаг состояния</td><td>Критическая секция</td></tr>
+                    </tbody>
+                </table>
+                <div class="callout"><strong>Spring Boot нюанс:</strong> если singleton-бин хранит mutable state, то недостаточно просто "добавить volatile почти везде". Нужно понять, требуется ли только видимость или именно защита последовательности операций.</div>
+            </section>
+
+            <section class="section" id="completable-future">
+                <div class="label">5. Композиция асинхронных задач</div>
+                <h2>CompletableFuture</h2>
+                <p><code>CompletableFuture</code> нужен, когда задача не просто запускается в фоне, а когда надо построить цепочку вычислений: получить данные из двух сервисов параллельно, объединить результаты, обработать ошибку и вернуть ответ клиенту.</p>
+                <h3>Типовой сценарий</h3>
+                <p>Пусть endpoint товара должен собрать карточку товара: базовую информацию из БД, цену из pricing-сервиса и остаток со склада. Эти три операции можно запустить параллельно, чтобы сократить latency.</p>
+                <pre><code>@Service
+public class ProductFacade {
+
+    private final CatalogService catalogService;
+    private final PricingService pricingService;
+    private final StockService stockService;
+
+    public CompletableFuture&lt;ProductCardDto&gt; loadProductCard(Long id) {
+        CompletableFuture&lt;ProductDto&gt; productFuture =
+                CompletableFuture.supplyAsync(() -&gt; catalogService.load(id));
+
+        CompletableFuture&lt;PriceDto&gt; priceFuture =
+                CompletableFuture.supplyAsync(() -&gt; pricingService.loadPrice(id));
+
+        CompletableFuture&lt;StockDto&gt; stockFuture =
+                CompletableFuture.supplyAsync(() -&gt; stockService.loadStock(id));
+
+        return CompletableFuture.allOf(productFuture, priceFuture, stockFuture)
+                .thenApply(v -&gt; new ProductCardDto(
+                        productFuture.join(),
+                        priceFuture.join(),
+                        stockFuture.join()
+                ));
+    }
+}</code></pre>
+                <div class="grid-3">
+                    <div class="mini-card"><strong><code>thenApply</code></strong><p>Преобразует результат синхронной функцией.</p></div>
+                    <div class="mini-card"><strong><code>thenCompose</code></strong><p>Нужен, когда следующий шаг тоже возвращает <code>CompletableFuture</code>.</p></div>
+                    <div class="mini-card"><strong><code>exceptionally</code></strong><p>Позволяет задать fallback или преобразовать ошибку.</p></div>
+                </div>
+                <h3>Что важно в Spring Boot</h3>
+                <ul class="checklist">
+                    <li>Не используйте по умолчанию общий <code>ForkJoinPool.commonPool()</code> для тяжелого I/O без причины.</li>
+                    <li>Передавайте явный executor, если контролируете тип нагрузки.</li>
+                    <li>Не делайте длинные цепочки без понятной обработки исключений и таймаутов.</li>
+                    <li>Если асинхронность нужна только ради I/O в web-слое, иногда лучше смотреть в сторону reactive-стека.</li>
+                </ul>
+                <pre><code>return priceClient.loadPriceAsync(id)
+        .orTimeout(2, TimeUnit.SECONDS)
+        .exceptionally(ex -&gt; PriceDto.unavailable())
+        .thenCombine(stockClient.loadStockAsync(id),
+                (price, stock) -&gt; new OfferDto(price, stock));</code></pre>
+                <div class="note"><strong>Частая ошибка:</strong> запустить асинхронный код, а потом сразу вызвать <code>join()</code> в том же месте без выигрыша по времени. Тогда асинхронность превращается в усложненную синхронность.</div>
+            </section>
+
+            <section class="section" id="load-testing">
+                <div class="label">6. Проверка под реальной нагрузкой</div>
+                <h2>Нагрузочное тестирование</h2>
+                <p>Нагрузочное тестирование показывает, как приложение ведет себя не на одном запросе, а на сотнях и тысячах. Для Spring Boot это способ проверить latency, throughput, устойчивость пула потоков, базы данных, кэша, внешних интеграций и лимитов.</p>
+                <div class="grid-2">
+                    <div class="mini-card">
+                        <strong>Что измеряют</strong>
+                        <ul>
+                            <li>RPS или TPS.</li>
+                            <li>Percentiles: p50, p95, p99.</li>
+                            <li>Частоту ошибок.</li>
+                            <li>Загрузку CPU, памяти, GC, thread pools, DB connections.</li>
+                        </ul>
+                    </div>
+                    <div class="mini-card">
+                        <strong>Популярные инструменты</strong>
+                        <ul>
+                            <li>JMeter.</li>
+                            <li>k6.</li>
+                            <li>Gatling.</li>
+                            <li>wrk для быстрых HTTP-замеров.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Минимальный сценарий</h3>
+                <div class="timeline">
+                    <div class="timeline-item"><strong>1. Baseline</strong><div>Снять метрики на 1 пользователе: среднее время ответа, SQL, логи, внешние вызовы.</div></div>
+                    <div class="timeline-item"><strong>2. Step load</strong><div>Постепенно повышать количество виртуальных пользователей и смотреть, где начинается деградация.</div></div>
+                    <div class="timeline-item"><strong>3. Spike</strong><div>Проверить, что будет при резком всплеске трафика.</div></div>
+                    <div class="timeline-item"><strong>4. Soak</strong><div>Подержать сервис долго под нагрузкой и проверить утечки памяти, рост очередей и деградацию.</div></div>
+                </div>
+                <h3>Что обычно ломается в Spring Boot</h3>
+                <ul>
+                    <li>Слишком маленький или слишком большой пул потоков.</li>
+                    <li>Блокирующие вызовы внутри <code>@Async</code> или web-обработчика.</li>
+                    <li>Connection pool базы данных заканчивается раньше, чем HTTP thread pool.</li>
+                    <li>Синхронизированные участки кода превращаются в бутылочное горлышко.</li>
+                    <li>Логирование в очень больших объемах начинает само влиять на latency.</li>
+                </ul>
+                <pre><code>import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 50,
+  duration: '30s',
+};
+
+export default function () {
+  http.get('http://localhost:8080/api/products/42');
+  sleep(1);
+}</code></pre>
+                <div class="callout"><strong>Идея:</strong> нагрузочный тест имеет смысл только вместе с метриками и логами. Если вы видите, что p95 вырос до 2 секунд, нужно еще понять, виноват ли CPU, пул БД, дедлок, внешнее API или rate limit.</div>
+            </section>
+
+            <section class="section" id="jmeter">
+                <div class="label">6A. Инструмент отдельно</div>
+                <h2>JMeter</h2>
+                <p><strong>JMeter</strong> — один из самых популярных инструментов для нагрузочного тестирования HTTP API, JDBC, JMS и других протоколов. Для Spring Boot его часто используют, когда нужно быстро собрать сценарий с авторизацией, набором endpoint'ов, параметрами запроса и отчетами по latency.</p>
+                <div class="grid-2">
+                    <div class="mini-card">
+                        <strong>Когда JMeter удобен</strong>
+                        <ul>
+                            <li>Нужно быстро собрать сценарий через GUI.</li>
+                            <li>Есть несколько шагов: логин, получение токена, вызов бизнес-методов.</li>
+                            <li>Нужны отчеты по error rate, throughput, p95 и p99.</li>
+                            <li>Команда уже использует .jmx сценарии в CI или вручную.</li>
+                        </ul>
+                    </div>
+                    <div class="mini-card">
+                        <strong>На что смотреть</strong>
+                        <ul>
+                            <li>Не только среднее время ответа, но и хвосты распределения.</li>
+                            <li>Рост 4xx/5xx ошибок по мере увеличения нагрузки.</li>
+                            <li>Насыщение thread pool, БД и внешних интеграций.</li>
+                            <li>Поведение RateLimiter при превышении лимитов.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="note"><strong>Практика:</strong> JMeter особенно полезен, если нужно показать, как приложение ведет себя при параллельных запросах к одному и тому же ресурсу. Это как раз хороший способ воспроизвести <code>race condition</code> в сервисах заказов, остатков или платежей.</div>
+            </section>
+
+            <section class="section" id="rate-limiter">
+                <div class="label">7. Защита от перегрузки</div>
+                <h2>RateLimiter</h2>
+                <p><strong>RateLimiter</strong> ограничивает частоту запросов. Его задача не только защищать от злоупотреблений, но и сохранять стабильность системы при пиках нагрузки.</p>
+                <div class="grid-2">
+                    <div class="mini-card">
+                        <strong>Зачем ставят лимиты</strong>
+                        <ul>
+                            <li>Защита от brute-force и spam.</li>
+                            <li>Стабилизация внешних API с ограниченной квотой.</li>
+                            <li>Предотвращение перегрузки базы и downstream-сервисов.</li>
+                            <li>Разделение честной пропускной способности между клиентами.</li>
+                        </ul>
+                    </div>
+                    <div class="mini-card">
+                        <strong>Где применяют</strong>
+                        <ul>
+                            <li>На API Gateway.</li>
+                            <li>В контроллере или фильтре Spring Boot.</li>
+                            <li>На вызовах внешних сервисов.</li>
+                            <li>На критичных операциях: логин, оплата, отправка кода подтверждения.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Пример с Resilience4j</h3>
+                <pre><code>@Service
+public class ExternalCatalogService {
+
+    @RateLimiter(name = "catalogApi")
+    public CatalogResponse fetchCatalog() {
+        return client.load();
+    }
+}</code></pre>
+                <pre><code>resilience4j.ratelimiter:
+  instances:
+    catalogApi:
+      limitForPeriod: 20
+      limitRefreshPeriod: 1s
+      timeoutDuration: 0</code></pre>
+                <p>Здесь в каждом периоде длиной 1 секунда разрешено 20 вызовов. Если лимит исчерпан, лишние вызовы будут отклонены сразу.</p>
+                <div class="note"><strong>Важно:</strong> локальный in-memory RateLimiter работает только внутри одного инстанса приложения. Если у вас несколько экземпляров сервиса, общий лимит часто реализуют через Redis или на уровне API Gateway / ingress.</div>
+                <table class="compare">
+                    <thead>
+                    <tr><th>Подход</th><th>Плюс</th><th>Минус</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>Локальный limiter в сервисе</td><td>Просто добавить</td><td>Не глобален между инстансами</td></tr>
+                    <tr><td>Gateway / Nginx / API management</td><td>Единая точка контроля</td><td>Меньше бизнес-контекста</td></tr>
+                    <tr><td>Redis-based limiter</td><td>Глобальный лимит</td><td>Сложнее инфраструктурно</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="section" id="elk">
+                <div class="label">8. Диагностика и наблюдаемость</div>
+                <h2>ELK стек</h2>
+                <p>ELK обычно означает <strong>Elasticsearch + Logstash + Kibana</strong>. Иногда вместо Logstash используют Fluent Bit или Filebeat, но идея остается той же: собрать логи из Spring Boot, централизованно сохранить, индексировать и удобно искать.</p>
+                <div class="grid-3">
+                    <div class="mini-card"><strong>Elasticsearch</strong><p>Хранит и индексирует логи, чтобы можно было быстро выполнять поиск и агрегации.</p></div>
+                    <div class="mini-card"><strong>Logstash / Beats</strong><p>Собирает, преобразует и пересылает логи из приложений и серверов.</p></div>
+                    <div class="mini-card"><strong>Kibana</strong><p>Дает интерфейс для поиска по логам, dashboards и расследования инцидентов.</p></div>
+                </div>
+                <h3>Зачем это Spring Boot приложению</h3>
+                <ul class="checklist">
+                    <li>Искать ошибки по traceId или requestId между несколькими сервисами.</li>
+                    <li>Понимать, какие endpoint'ы чаще всего падают под нагрузкой.</li>
+                    <li>Связывать пики 429/500 ошибок с конкретным временем и клиентами.</li>
+                    <li>Смотреть stacktrace централизованно, а не на каждом сервере отдельно.</li>
+                </ul>
+                <h3>Практический подход</h3>
+                <pre><code>{
+  "timestamp": "2026-04-05T12:00:00Z",
+  "level": "INFO",
+  "service": "video-games-shop",
+  "thread": "http-nio-8080-exec-7",
+  "traceId": "7ca4d8dce92d4d81",
+  "path": "/api/orders",
+  "message": "Order created",
+  "userId": 42
+}</code></pre>
+                <p>Самый полезный формат для машинного анализа — структурированные JSON-логи. Тогда Kibana может фильтровать по полям: <code>traceId</code>, <code>path</code>, <code>level</code>, <code>thread</code>, <code>userId</code>.</p>
+                <div class="grid-2">
+                    <div class="mini-card">
+                        <strong>Что логировать обязательно</strong>
+                        <ul>
+                            <li>Время и уровень.</li>
+                            <li>Имя сервиса и окружение.</li>
+                            <li>traceId / correlationId.</li>
+                            <li>HTTP method, path, статус, latency.</li>
+                            <li>Ошибку и ключевые бизнес-идентификаторы.</li>
+                        </ul>
+                    </div>
+                    <div class="mini-card">
+                        <strong>Чего избегать</strong>
+                        <ul>
+                            <li>Паролей, токенов, номеров карт, персональных данных.</li>
+                            <li>Слишком шумных логов на горячем пути.</li>
+                            <li>Неструктурированных многострочных сообщений без контекста.</li>
+                            <li>Логирования "всего подряд" вместо полезных событий.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout"><strong>Связь с нагрузочным тестированием:</strong> во время load test вы можете в Kibana видеть, с какого момента пошли таймауты, всплеск ошибок 429, очереди в executor'ах или зависшие операции. ELK дает не только хранение логов, но и возможность расследовать причины деградации.</div>
+            </section>
+
+            <section class="section" id="interview-map">
+                <div class="label">9. Цельная картина</div>
+                <h2>Как связать все темы в одном Spring Boot проекте</h2>
+                <p>Представим интернет-магазин игр. Пользователь открывает карточку товара, оформляет заказ и вызывает внешние сервисы оплаты, каталога и рекомендаций. Тогда темы из этого конспекта складываются в одну практическую картину:</p>
+                <div class="timeline">
+                    <div class="timeline-item"><strong>Потоки</strong><div>HTTP-запросы приходят в thread pool веб-сервера. Несколько пользователей работают одновременно.</div></div>
+                    <div class="timeline-item"><strong>Race condition</strong><div>Без синхронизации можно дважды списать остаток товара или сгенерировать одинаковый номер заказа.</div></div>
+                    <div class="timeline-item"><strong>Deadlock</strong><div>Некорректные блокировки в Java-коде или транзакциях БД могут подвесить оформление заказа.</div></div>
+                    <div class="timeline-item"><strong><code>volatile</code> / <code>synchronized</code></strong><div>Нужны для корректной работы разделяемого состояния, флагов и критических секций.</div></div>
+                    <div class="timeline-item"><strong><code>CompletableFuture</code></strong><div>Помогает параллельно подтянуть цену, остатки и рекомендации, чтобы сократить время ответа.</div></div>
+                    <div class="timeline-item"><strong>Load testing</strong><div>Показывает, выдержит ли приложение 100, 500 или 1000 пользователей одновременно.</div></div>
+                    <div class="timeline-item"><strong>RateLimiter</strong><div>Не дает одному клиенту или всплеску трафика положить сервис логина, оплат или внешнюю интеграцию.</div></div>
+                    <div class="timeline-item"><strong>ELK</strong><div>Позволяет понять, где именно система начала тормозить, выбрасывать ошибки или застревать.</div></div>
+                </div>
+                <div class="note"><strong>Если нужно коротко сформулировать на собеседовании:</strong> "Spring Boot приложение почти всегда многопоточное, поэтому я должен понимать видимость памяти, синхронизацию, безопасную асинхронность, поведение под нагрузкой и инструменты диагностики в production".</div>
+            </section>
+        </main>
+    </div>
+
+    <section class="footer">
+        <strong>Итог</strong>
+        <p>Самая полезная стратегия в backend-разработке: не рассматривать эти темы по отдельности. Потоки влияют на корректность данных, корректность данных влияет на поведение под нагрузкой, нагрузка выявляет узкие места, а ELK и метрики помогают объяснить, почему система деградировала. Именно вместе эти знания делают Spring Boot сервис предсказуемым и устойчивым.</p>
+    </section>
+</div>
+</body>
+</html>

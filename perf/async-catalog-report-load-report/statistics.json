@@ -1,0 +1,50 @@
+{
+  "POST start async catalog report" : {
+    "transaction" : "POST start async catalog report",
+    "sampleCount" : 30000,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 893.282233333335,
+    "medianResTime" : 1070.0,
+    "minResTime" : 0.0,
+    "maxResTime" : 3270.0,
+    "pct1ResTime" : 1986.0,
+    "pct2ResTime" : 2161.0,
+    "pct3ResTime" : 2599.0,
+    "throughput" : 1405.7448104587413,
+    "receivedKBytesPerSec" : 330.8442376177311,
+    "sentKBytesPerSec" : 328.0986422848039
+  },
+  "GET async job status" : {
+    "transaction" : "GET async job status",
+    "sampleCount" : 60000,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 1001.7632000000042,
+    "medianResTime" : 578.0,
+    "minResTime" : 0.0,
+    "maxResTime" : 2665.0,
+    "pct1ResTime" : 2109.0,
+    "pct2ResTime" : 2157.0,
+    "pct3ResTime" : 2612.0,
+    "throughput" : 3334.074238719715,
+    "receivedKBytesPerSec" : 1301.9534940056124,
+    "sentKBytesPerSec" : 784.6795815736831
+  },
+  "Total" : {
+    "transaction" : "Total",
+    "sampleCount" : 90000,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 965.6028777777805,
+    "medianResTime" : 490.0,
+    "minResTime" : 0.0,
+    "maxResTime" : 3270.0,
+    "pct1ResTime" : 1219.0,
+    "pct2ResTime" : 1360.0,
+    "pct3ResTime" : 1979.9900000000016,
+    "throughput" : 3990.776871230933,
+    "receivedKBytesPerSec" : 1352.008777630587,
+    "sentKBytesPerSec" : 936.6374102075204
+  }
+}

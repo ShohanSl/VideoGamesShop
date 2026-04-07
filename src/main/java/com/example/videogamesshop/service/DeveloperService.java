@@ -12,6 +12,7 @@ import com.example.videogamesshop.entity.Category;
 import com.example.videogamesshop.entity.Developer;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.Publisher;
+import com.example.videogamesshop.entity.User;
 import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.exception.DeveloperNotFoundException;
 import com.example.videogamesshop.exception.GameNotFoundException;
@@ -66,10 +67,9 @@ public class DeveloperService {
     }
 
     public void deleteDeveloper(Long id) {
-        if (!developerRepository.existsById(id)) {
-            throw new DeveloperNotFoundException(id);
-        }
-        developerRepository.deleteById(id);
+        Developer developer = findDeveloperById(id);
+        removeAllGamesForDeveloper(developer);
+        developerRepository.delete(developer);
         cacheService.clear();
     }
 
@@ -151,8 +151,32 @@ public class DeveloperService {
             cacheService.clear();
             return;
         }
-        developer.removeGame(game);
+        removeGameForDeveloper(developer, game);
         cacheService.clear();
+    }
+
+    private void removeAllGamesForDeveloper(Developer developer) {
+        List<Game> gamesToDelete = List.copyOf(developer.getGames());
+        gamesToDelete.forEach(game -> removeGameForDeveloper(developer, game));
+    }
+
+    private void removeGameForDeveloper(Developer developer, Game game) {
+        if (game.getPublisher() != null) {
+            Publisher publisher = game.getPublisher();
+            publisher.getGames().remove(game);
+            game.setPublisher(null);
+        }
+        if (game.getCategories() != null) {
+            Set<Category> categories = Set.copyOf(game.getCategories());
+            categories.forEach(category -> category.getGames().remove(game));
+            game.getCategories().clear();
+        }
+        if (game.getLibraries() != null) {
+            List<User> users = List.copyOf(game.getLibraries());
+            users.forEach(user -> user.removeGame(game));
+            game.getLibraries().clear();
+        }
+        developer.removeGame(game);
     }
 
     private Developer findDeveloperById(Long id) {
@@ -175,3 +199,4 @@ public class DeveloperService {
                 .orElseThrow(() -> new PublisherNotFoundException("publisherId", id));
     }
 }
+
