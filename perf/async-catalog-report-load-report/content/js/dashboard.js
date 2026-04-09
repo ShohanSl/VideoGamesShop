@@ -173,7 +173,7 @@ $(document).ready(function() {
     });
 
     // Creates APDEX table
-    createTable($("#apdexTable"), {"supportsControllersDiscrimination": true, "overall": {"data": [0.5101833333333333, 500, 1500, "Total"], "isController": false}, "titles": ["Apdex", "T (Toleration threshold)", "F (Frustration threshold)", "Label"], "items": [{"data": [0.53705, 500, 1500, "POST start async catalog report"], "isController": false}, {"data": [0.49675, 500, 1500, "GET async job status"], "isController": false}]}, function(index, item){
+    createTable($("#apdexTable"), {"supportsControllersDiscrimination": true, "overall": {"data": [0.5343111111111111, 500, 1500, "Total"], "isController": false}, "titles": ["Apdex", "T (Toleration threshold)", "F (Frustration threshold)", "Label"], "items": [{"data": [0.5206333333333333, 500, 1500, "POST start async catalog report"], "isController": false}, {"data": [0.54115, 500, 1500, "GET async job status"], "isController": false}]}, function(index, item){
         switch(index){
             case 0:
                 item = item.toFixed(3);
@@ -187,7 +187,7 @@ $(document).ready(function() {
     }, [[0, 0]], 3);
 
     // Create statistics table
-    createTable($("#statisticsTable"), {"supportsControllersDiscrimination": true, "overall": {"data": ["Total", 90000, 0, 0.0, 965.6028777777805, 0, 3270, 490.0, 1219.0, 1360.0, 1979.9900000000016, 3990.776871230933, 1352.008777630587, 936.6374102075204], "isController": false}, "titles": ["Label", "#Samples", "FAIL", "Error %", "Average", "Min", "Max", "Median", "90th pct", "95th pct", "99th pct", "Transactions/s", "Received", "Sent"], "items": [{"data": ["POST start async catalog report", 30000, 0, 0.0, 893.282233333335, 0, 3270, 1070.0, 1986.0, 2161.0, 2599.0, 1405.7448104587413, 330.8442376177311, 328.0986422848039], "isController": false}, {"data": ["GET async job status", 60000, 0, 0.0, 1001.7632000000042, 0, 2665, 578.0, 2109.0, 2157.0, 2612.0, 3334.074238719715, 1301.9534940056124, 784.6795815736831], "isController": false}]}, function(index, item){
+    createTable($("#statisticsTable"), {"supportsControllersDiscrimination": true, "overall": {"data": ["Total", 90000, 0, 0.0, 956.0740888888987, 0, 2927, 427.0, 785.0, 884.0, 1200.0, 4271.273314033506, 1434.7314121749084, 1002.4700714251815], "isController": false}, "titles": ["Label", "#Samples", "FAIL", "Error %", "Average", "Min", "Max", "Median", "90th pct", "95th pct", "99th pct", "Transactions/s", "Received", "Sent"], "items": [{"data": ["POST start async catalog report", 30000, 0, 0.0, 965.9498333333303, 0, 2927, 1198.0, 1888.0, 2033.0, 2348.0, 1515.6873642196736, 356.7193894306068, 353.75906254736526], "isController": false}, {"data": ["GET async job status", 60000, 0, 0.0, 951.1362166666704, 0, 2483, 445.0, 1047.0, 1125.0, 1444.0, 3389.639003446133, 1309.0039382485452, 797.7568357719903], "isController": false}]}, function(index, item){
         switch(index){
             // Errors pct
             case 3:

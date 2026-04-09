@@ -22,7 +22,7 @@ public class AsyncCatalogReportWorker {
     private final UserRepository userRepository;
 
     @Async("demoTaskExecutor")
-    public CompletableFuture<Void> buildCatalogReport(String taskId) {
+    public void buildCatalogReport(String taskId) {
         AsyncJobState state = asyncJobRegistryService.getJobState(taskId);
         state.markRunning();
         try {
@@ -42,6 +42,6 @@ public class AsyncCatalogReportWorker {
             state.markFailed(exception.getMessage());
             throw exception;
         }
-        return CompletableFuture.completedFuture(null);
+        CompletableFuture.completedFuture(null);
     }
 }
