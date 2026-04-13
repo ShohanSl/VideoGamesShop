@@ -16,7 +16,6 @@ import com.example.videogamesshop.entity.Category;
 import com.example.videogamesshop.entity.Developer;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.Publisher;
-import com.example.videogamesshop.entity.User;
 import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.exception.DeveloperNotFoundException;
 import com.example.videogamesshop.exception.GameNotFoundException;
@@ -142,7 +141,7 @@ class GameServiceTest {
         game.setId(1L);
         GameFullResponse response = new GameFullResponse();
         response.setId(1L);
-        when(gameRepository.findById(1L)).thenReturn(Optional.of(game));
+        when(gameRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(game));
         when(gameMapper.toFullResponse(game)).thenReturn(response);
 
         GameFullResponse result = gameService.getGameById(1L);
@@ -152,7 +151,7 @@ class GameServiceTest {
 
     @Test
     void shouldThrowWhenGameNotFound() {
-        when(gameRepository.findById(99L)).thenReturn(Optional.empty());
+        when(gameRepository.findByIdWithDetails(99L)).thenReturn(Optional.empty());
 
         assertThrows(GameNotFoundException.class, () -> gameService.getGameById(99L));
     }
@@ -190,9 +189,10 @@ class GameServiceTest {
         GameFullResponse result = gameService.createGame(request);
 
         assertEquals(11L, result.getId());
+        assertSame(developer, mappedGame.getDeveloper());
+        assertSame(publisher, mappedGame.getPublisher());
+        assertEquals(1, mappedGame.getCategories().size());
         verify(cacheService).clear();
-        assertEquals(1, developer.getGames().size());
-        assertEquals(1, publisher.getGames().size());
     }
 
     @Test
@@ -236,7 +236,6 @@ class GameServiceTest {
 
         when(developerRepository.findById(1L)).thenReturn(Optional.of(developer));
         when(publisherRepository.findById(2L)).thenReturn(Optional.of(publisher));
-        when(gameMapper.toEntity(request)).thenReturn(mappedGame);
         when(categoryRepository.findById(3L)).thenReturn(Optional.empty());
 
         assertThrows(CategoryNotFoundException.class,
@@ -349,57 +348,31 @@ class GameServiceTest {
 
     @Test
     void shouldDeleteGameAndRemoveRelations() {
-        Game game = new Game();
-        game.setId(1L);
-        Developer developer = new Developer();
-        developer.addGame(game);
-
-        Publisher publisher = new Publisher();
-        publisher.addGame(game);
-
-        Category category = new Category();
-        category.setGames(new HashSet<>(Set.of(game)));
-        game.setCategories(new HashSet<>(Set.of(category)));
-
-        User user = new User();
-        user.addGame(game);
-
-        when(gameRepository.findById(1L)).thenReturn(Optional.of(game));
+        when(gameRepository.existsById(1L)).thenReturn(true);
 
         gameService.deleteGame(1L);
 
-        assertEquals(0, developer.getGames().size());
-        assertEquals(0, publisher.getGames().size());
-        assertEquals(0, category.getGames().size());
-        assertEquals(0, user.getGames().size());
-        assertEquals(0, game.getLibraries().size());
-        assertEquals(0, game.getCategories().size());
-        verify(gameRepository).delete(game);
+        verify(gameRepository).deleteUserLinksByGameId(1L);
+        verify(gameRepository).deleteCategoryLinksByGameId(1L);
+        verify(gameRepository).deleteById(1L);
         verify(cacheService).clear();
     }
 
     @Test
     void shouldDeleteGameWithoutOptionalRelations() {
-        Game game = new Game();
-        game.setId(5L);
-        game.setDeveloper(null);
-        game.setCategories(null);
-        User user = new User();
-        user.getGames().add(game);
-        game.setLibraries(new HashSet<>(Set.of(user)));
-
-        when(gameRepository.findById(5L)).thenReturn(Optional.of(game));
+        when(gameRepository.existsById(5L)).thenReturn(true);
 
         gameService.deleteGame(5L);
 
-        assertEquals(0, user.getGames().size());
-        verify(gameRepository).delete(game);
+        verify(gameRepository).deleteUserLinksByGameId(5L);
+        verify(gameRepository).deleteCategoryLinksByGameId(5L);
+        verify(gameRepository).deleteById(5L);
         verify(cacheService).clear();
     }
 
     @Test
     void shouldThrowWhenDeletingMissingGame() {
-        when(gameRepository.findById(404L)).thenReturn(Optional.empty());
+        when(gameRepository.existsById(404L)).thenReturn(false);
 
         assertThrows(GameNotFoundException.class,
                 () -> gameService.deleteGame(404L));

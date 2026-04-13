@@ -6,10 +6,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.videogamesshop.cache.GameCacheService;
 import com.example.videogamesshop.dto.publisher.PublisherCreateRequest;
 import com.example.videogamesshop.dto.publisher.PublisherFullResponse;
 import com.example.videogamesshop.entity.Publisher;
 import com.example.videogamesshop.exception.PublisherNotFoundException;
+import com.example.videogamesshop.repository.GameRepository;
 import com.example.videogamesshop.repository.PublisherRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +27,12 @@ class PublisherServiceTest {
 
     @Mock
     private PublisherRepository publisherRepository;
+
+    @Mock
+    private GameRepository gameRepository;
+
+    @Mock
+    private GameCacheService cacheService;
 
     @InjectMocks
     private PublisherService publisherService;
@@ -122,11 +130,15 @@ class PublisherServiceTest {
     }
 
     @Test
-    void shouldDeletePublisher() {
+    void shouldDeletePublisherWithGames() {
         when(publisherRepository.existsById(2L)).thenReturn(true);
 
         publisherService.deletePublisher(2L);
 
+        verify(gameRepository).deleteUserLinksByPublisherId(2L);
+        verify(gameRepository).deleteCategoryLinksByPublisherId(2L);
+        verify(gameRepository).deleteGamesByPublisherId(2L);
         verify(publisherRepository).deleteById(2L);
+        verify(cacheService).clear();
     }
 }

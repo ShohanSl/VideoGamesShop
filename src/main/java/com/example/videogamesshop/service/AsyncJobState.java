@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.time.OffsetDateTime;
 
+@Getter
 public class AsyncJobState {
 
     private final String taskId;
@@ -39,31 +40,4 @@ public class AsyncJobState {
         error = jobError;
     }
 
-    public String getTaskId() {
-        return taskId;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public AsyncJobStatus getStatus() {
-        return status;
-    }
-
-    public OffsetDateTime getStartedAt() {
-        return startedAt;
-    }
-
-    public OffsetDateTime getFinishedAt() {
-        return finishedAt;
-    }
-
-    public String getResult() {
-        return result;
-    }
-
-    public String getError() {
-        return error;
-    }
 }

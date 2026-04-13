@@ -1,0 +1,32 @@
+@import "./theme.css";
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at top left, rgba(85, 193, 255, 0.18), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.22), transparent 28%),
+        linear-gradient(135deg, #070b14 0%, #0d1424 45%, #0a101d 100%);
+    min-height: 100vh;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+    color: var(--text);
+}
+
+a {
+    color: inherit;
+}

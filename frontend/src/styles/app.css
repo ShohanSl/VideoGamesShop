@@ -1,0 +1,537 @@
+.landing-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 32px;
+}
+
+.landing-card,
+.content-panel,
+.crud-form,
+.crud-list,
+.details-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.landing-card {
+    width: min(760px, 100%);
+    border-radius: 28px;
+    padding: 36px;
+    text-align: center;
+    position: relative;
+}
+
+.landing-card.narrow {
+    width: min(520px, 100%);
+}
+
+.brand-kicker {
+    display: inline-block;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.76rem;
+    margin-bottom: 12px;
+}
+
+.landing-card h1,
+.content-header h2,
+.details-header h2 {
+    margin: 0 0 10px;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.landing-card p,
+.content-header p,
+.brand-block p,
+.card-meta,
+.details-list,
+.empty-box {
+    color: var(--muted);
+}
+
+.role-grid {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.role-card,
+.primary-button,
+.ghost-button,
+.danger-button,
+.nav-link,
+.back-button,
+.mode-switch-floating,
+.library-badge {
+    border: 1px solid transparent;
+    border-radius: 18px;
+    transition: 0.2s ease;
+}
+
+.role-card {
+    background: linear-gradient(180deg, rgba(85, 193, 255, 0.08), rgba(139, 92, 246, 0.08));
+    padding: 26px;
+    color: var(--text);
+    display: grid;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.role-card:hover,
+.primary-button:hover,
+.ghost-button:hover,
+.danger-button:hover,
+.nav-link:hover,
+.back-button:hover,
+.mode-switch-floating:hover {
+    transform: translateY(-1px);
+    border-color: rgba(85, 193, 255, 0.35);
+}
+
+.back-button {
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.login-form {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.login-form input,
+.crud-form input,
+.crud-form textarea,
+.crud-form select,
+.dark-select {
+    background: #0d1322;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.shell-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    position: relative;
+}
+
+.shell-sidebar {
+    background: rgba(8, 12, 21, 0.92);
+    border-right: 1px solid var(--border);
+    padding: 20px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+}
+
+.mode-switch-floating {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    cursor: pointer;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    backdrop-filter: blur(14px);
+}
+
+.brand-block {
+    padding: 0 8px 0 48px;
+}
+
+.brand-block h1 {
+    margin: 0 0 8px;
+    margin-left: -6px;
+    font-size: 1.7rem;
+}
+
+.shell-nav {
+    display: grid;
+    gap: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 14px 16px;
+}
+
+.nav-link.active {
+    background: linear-gradient(90deg, rgba(85, 193, 255, 0.18), rgba(139, 92, 246, 0.18));
+    border-color: rgba(85, 193, 255, 0.3);
+}
+
+.report-widget {
+    display: grid;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.report-trigger {
+    width: 100%;
+    text-align: left;
+}
+
+.report-box {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+}
+
+.report-status,
+.report-meta,
+.report-error,
+.muted-text {
+    font-size: 0.92rem;
+}
+
+.report-meta,
+.muted-text {
+    color: var(--muted);
+}
+
+.report-error {
+    color: #ff9db0;
+}
+
+.report-text {
+    margin: 0;
+    white-space: pre-wrap;
+    font: inherit;
+    line-height: 1.55;
+}
+
+.shell-content {
+    padding: 28px;
+    display: grid;
+    gap: 18px;
+}
+
+.content-panel {
+    border-radius: 24px;
+    padding: 24px;
+}
+
+.content-header,
+.details-header,
+.list-card,
+.crud-row,
+.inline-actions,
+.pager,
+.details-grid,
+.crud-layout,
+.bulk-game-header {
+    display: flex;
+    gap: 16px;
+}
+
+.content-header,
+.details-header,
+.list-card,
+.crud-row,
+.bulk-game-header {
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.catalog-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+}
+
+.search-input {
+    min-width: 240px;
+}
+
+.filters-dropdown {
+    position: relative;
+}
+
+.filters-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 260px;
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 16px;
+    background: #0d1322;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    z-index: 10;
+}
+
+.filters-field {
+    display: grid;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.small-button {
+    padding: 9px 12px;
+    border-radius: 12px;
+}
+
+.items-list,
+.tag-row,
+.related-list,
+.checkbox-panel,
+.bulk-grid,
+.bulk-games-list {
+    display: grid;
+    gap: 12px;
+}
+
+.list-card,
+.crud-row,
+.details-card,
+.crud-form,
+.bulk-game-card {
+    border-radius: 20px;
+    padding: 18px;
+}
+
+.game-link,
+.related-link,
+.entity-link {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.game-link:hover,
+.related-link:hover,
+.entity-link:hover {
+    color: var(--primary);
+}
+
+.tag-row {
+    grid-template-columns: repeat(auto-fit, minmax(100px, max-content));
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(85, 193, 255, 0.12);
+    color: #a8dfff;
+    font-size: 0.85rem;
+}
+
+.card-side,
+.pager {
+    align-items: center;
+}
+
+.card-side {
+    display: grid;
+    gap: 12px;
+    justify-items: end;
+}
+
+.primary-button {
+    background: linear-gradient(90deg, var(--primary-strong), var(--accent));
+    color: white;
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.ghost-button {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.danger-button {
+    background: rgba(255, 107, 129, 0.14);
+    color: #ffb2be;
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.library-badge {
+    background: rgba(39, 192, 147, 0.16);
+    color: #8ff0cf;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+}
+
+.empty-box {
+    padding: 26px;
+    border: 1px dashed var(--border);
+    border-radius: 18px;
+    text-align: center;
+}
+
+.details-grid,
+.crud-layout {
+    flex-wrap: wrap;
+}
+
+.details-card {
+    flex: 1 1 320px;
+}
+
+.details-list {
+    display: grid;
+    gap: 10px;
+}
+
+.details-price {
+    color: var(--primary);
+    font-size: 1.6rem;
+}
+
+.details-actions {
+    margin-top: 18px;
+}
+
+.related-list {
+    margin-top: 10px;
+}
+
+.crud-layout {
+    align-items: flex-start;
+}
+
+.crud-list {
+    flex: 1.25;
+    display: grid;
+    gap: 12px;
+    border-radius: 22px;
+    padding: 16px;
+}
+
+.crud-form {
+    flex: 0.95;
+    display: grid;
+    gap: 12px;
+}
+
+.stack-form {
+    display: grid;
+    gap: 12px;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.wide-form {
+    max-width: none;
+}
+
+.crud-form textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.checkbox-item.dark {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 10px 12px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bulk-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.bulk-game-card {
+    display: grid;
+    gap: 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.bulk-game-header {
+    align-items: center;
+}
+
+.bulk-game-header h3 {
+    margin: 0;
+}
+
+@media (max-width: 960px) {
+    .shell-page {
+        grid-template-columns: 1fr;
+    }
+
+    .shell-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding-top: 64px;
+    }
+
+    .role-grid,
+    .crud-layout,
+    .bulk-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 680px) {
+    .landing-page,
+    .shell-content {
+        padding: 16px;
+    }
+
+    .landing-card,
+    .content-panel {
+        padding: 20px;
+    }
+
+    .role-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .content-header,
+    .details-header,
+    .list-card,
+    .crud-row,
+    .pager,
+    .bulk-game-header {
+        flex-direction: column;
+    }
+
+    .filters-menu {
+        left: 0;
+        right: auto;
+        width: min(280px, calc(100vw - 48px));
+    }
+}

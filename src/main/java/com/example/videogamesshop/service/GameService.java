@@ -10,7 +10,6 @@ import com.example.videogamesshop.entity.Category;
 import com.example.videogamesshop.entity.Developer;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.Publisher;
-import com.example.videogamesshop.entity.User;
 import com.example.videogamesshop.exception.CategoryNotFoundException;
 import com.example.videogamesshop.exception.DeveloperNotFoundException;
 import com.example.videogamesshop.exception.GameNotFoundException;
@@ -72,7 +71,7 @@ public class GameService {
     }
 
     public GameFullResponse getGameById(Long id) {
-        return gameRepository.findById(id)
+        return gameRepository.findByIdWithDetails(id)
                 .map(gameMapper::toFullResponse)
                 .orElseThrow(() -> new GameNotFoundException(id));
     }
@@ -84,17 +83,17 @@ public class GameService {
         Publisher publisher = publisherRepository.findById(request.getPublisherId())
                 .orElseThrow(() -> new PublisherNotFoundException(
                         "publisherId", request.getPublisherId()));
-        Game game = gameMapper.toEntity(request);
-        game.setDeveloper(developer);
-        game.setPublisher(publisher);
-        developer.getGames().add(game);
-        publisher.getGames().add(game);
+
         Set<Category> categories = request.getCategoryIds().stream()
                 .map(catId -> categoryRepository.findById(catId)
                         .orElseThrow(() -> new CategoryNotFoundException("categoryIds", catId)))
                 .collect(Collectors.toSet());
+
+        Game game = gameMapper.toEntity(request);
+        game.setDeveloper(developer);
+        game.setPublisher(publisher);
         game.setCategories(categories);
-        categories.forEach(cat -> cat.getGames().add(game));
+
         Game savedGame = gameRepository.save(game);
         cacheService.clear();
         return gameMapper.toFullResponse(savedGame);
@@ -121,24 +120,15 @@ public class GameService {
         return gameMapper.toFullResponse(existingGame);
     }
 
+    @Transactional
     public void deleteGame(Long id) {
-        Game game = gameRepository.findById(id)
-                .orElseThrow(() -> new GameNotFoundException(id));
-        if (game.getDeveloper() != null) {
-            game.getDeveloper().removeGame(game);
+        if (!gameRepository.existsById(id)) {
+            throw new GameNotFoundException(id);
         }
-        if (game.getPublisher() != null) {
-            game.getPublisher().removeGame(game);
-        }
-        if (game.getCategories() != null) {
-            Set<Category> categories = Set.copyOf(game.getCategories());
-            categories.forEach(cat -> cat.getGames().remove(game));
-            game.getCategories().clear();
-        }
-        for (User user : Set.copyOf(game.getLibraries())) {
-            user.removeGame(game);
-        }
-        gameRepository.delete(game);
+
+        gameRepository.deleteUserLinksByGameId(id);
+        gameRepository.deleteCategoryLinksByGameId(id);
+        gameRepository.deleteById(id);
         cacheService.clear();
     }
 

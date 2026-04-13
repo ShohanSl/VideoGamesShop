@@ -3,10 +3,12 @@ package com.example.videogamesshop.repository;
 import com.example.videogamesshop.entity.Game;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -33,6 +35,33 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             + "LEFT JOIN FETCH g.categories "
             + "WHERE g.id IN :ids")
     List<Game> findGamesWithDetailsByIds(@Param("ids") List<Long> ids);
+
+    @Query("SELECT DISTINCT g FROM Game g "
+            + "LEFT JOIN FETCH g.developer "
+            + "LEFT JOIN FETCH g.publisher "
+            + "LEFT JOIN FETCH g.categories "
+            + "WHERE g.id = :id")
+    Optional<Game> findByIdWithDetails(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "DELETE FROM user_game WHERE game_id = :gameId", nativeQuery = true)
+    void deleteUserLinksByGameId(@Param("gameId") Long gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM game_category WHERE game_id = :gameId", nativeQuery = true)
+    void deleteCategoryLinksByGameId(@Param("gameId") Long gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM user_game WHERE game_id IN (SELECT id FROM games WHERE publisher_id = :publisherId)", nativeQuery = true)
+    void deleteUserLinksByPublisherId(@Param("publisherId") Long publisherId);
+
+    @Modifying
+    @Query(value = "DELETE FROM game_category WHERE game_id IN (SELECT id FROM games WHERE publisher_id = :publisherId)", nativeQuery = true)
+    void deleteCategoryLinksByPublisherId(@Param("publisherId") Long publisherId);
+
+    @Modifying
+    @Query(value = "DELETE FROM games WHERE publisher_id = :publisherId", nativeQuery = true)
+    void deleteGamesByPublisherId(@Param("publisherId") Long publisherId);
 
     default Page<Game> findAllWithDetails(Pageable pageable) {
         Page<Long> idsPage = findGameIds(pageable);

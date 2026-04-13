@@ -1,10 +1,12 @@
 package com.example.videogamesshop.service;
 
+import com.example.videogamesshop.cache.GameCacheService;
 import com.example.videogamesshop.dto.publisher.PublisherCreateRequest;
 import com.example.videogamesshop.dto.publisher.PublisherFullResponse;
 import com.example.videogamesshop.entity.Publisher;
 import com.example.videogamesshop.exception.PublisherNotFoundException;
 import com.example.videogamesshop.mapper.PublisherMapper;
+import com.example.videogamesshop.repository.GameRepository;
 import com.example.videogamesshop.repository.PublisherRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class PublisherService {
 
     private final PublisherRepository publisherRepository;
+    private final GameRepository gameRepository;
+    private final GameCacheService cacheService;
 
     public List<PublisherFullResponse> getAllPublishers() {
         return publisherRepository.findAll().stream()
@@ -44,7 +48,12 @@ public class PublisherService {
         if (!publisherRepository.existsById(id)) {
             throw new PublisherNotFoundException(id);
         }
+
+        gameRepository.deleteUserLinksByPublisherId(id);
+        gameRepository.deleteCategoryLinksByPublisherId(id);
+        gameRepository.deleteGamesByPublisherId(id);
         publisherRepository.deleteById(id);
+        cacheService.clear();
     }
 
     private Publisher findPublisherById(Long id) {

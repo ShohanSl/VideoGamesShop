@@ -200,3 +200,5 @@ README.html
 .idea
 .exercism
 .env
+frontend/node_modules/
+frontend/.vite/

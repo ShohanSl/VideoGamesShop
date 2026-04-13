@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class AsyncCatalogReportWorkerTest {
@@ -42,6 +43,7 @@ class AsyncCatalogReportWorkerTest {
 
     @Test
     void shouldCompleteJobWhenReportBuilt() {
+        ReflectionTestUtils.setField(asyncCatalogReportWorker, "runningDelayMs", 0L);
         AsyncJobState state = new AsyncJobState("task-1");
         when(asyncJobRegistryService.getJobState("task-1")).thenReturn(state);
         when(gameRepository.count()).thenReturn(10L);
@@ -61,6 +63,7 @@ class AsyncCatalogReportWorkerTest {
 
     @Test
     void shouldFailJobWhenRepositoryThrows() {
+        ReflectionTestUtils.setField(asyncCatalogReportWorker, "runningDelayMs", 0L);
         AsyncJobState state = new AsyncJobState("task-2");
         when(asyncJobRegistryService.getJobState("task-2")).thenReturn(state);
         when(gameRepository.count()).thenThrow(new IllegalStateException("db down"));

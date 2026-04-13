@@ -7,6 +7,7 @@ import com.example.videogamesshop.repository.PublisherRepository;
 import com.example.videogamesshop.repository.UserRepository;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +21,16 @@ public class AsyncCatalogReportWorker {
     private final PublisherRepository publisherRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    @Value("${app.async.catalog-report-running-delay-ms:15000}")
+    private long runningDelayMs;
 
     @Async("demoTaskExecutor")
     public void buildCatalogReport(String taskId) {
         AsyncJobState state = asyncJobRegistryService.getJobState(taskId);
         state.markRunning();
         try {
+            sleepWhileRunning();
+
             long games = gameRepository.count();
             long developers = developerRepository.count();
             long publishers = publisherRepository.count();
@@ -43,5 +48,14 @@ public class AsyncCatalogReportWorker {
             throw exception;
         }
         CompletableFuture.completedFuture(null);
+    }
+
+    private void sleepWhileRunning() {
+        try {
+            Thread.sleep(runningDelayMs);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Async catalog report was interrupted", exception);
+        }
     }
 }

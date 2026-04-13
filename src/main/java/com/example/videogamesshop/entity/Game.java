@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PreRemove;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -69,4 +70,27 @@ public class Game {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<User> libraries = new HashSet<>();
+
+    @PreRemove
+    private void detachRelationsBeforeDelete() {
+        for (User user : new HashSet<>(libraries)) {
+            user.getGames().remove(this);
+        }
+        libraries.clear();
+
+        for (Category category : new HashSet<>(categories)) {
+            category.getGames().remove(this);
+        }
+        categories.clear();
+
+        if (developer != null) {
+            developer.getGames().remove(this);
+            developer = null;
+        }
+
+        if (publisher != null) {
+            publisher.getGames().remove(this);
+            publisher = null;
+        }
+    }
 }
