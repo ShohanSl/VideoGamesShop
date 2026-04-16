@@ -8,9 +8,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
+@Scope("prototype")
 public class RaceConditionDemoService {
 
     public RaceConditionResponse runUnsafeDemo(int threads, int incrementsPerThread) {
@@ -96,7 +99,6 @@ public class RaceConditionDemoService {
             throw new IllegalStateException("Executor shutdown was interrupted", exception);
         }
     }
-
     private static final class UnsafeCounter {
         private long value;
 
