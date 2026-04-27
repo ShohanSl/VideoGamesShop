@@ -153,7 +153,7 @@ function linkCell(href, label) {
 
 function EntityManagementPage({ title, description, data, columns, form, tableFooter, emptyText }) {
     return (
-        <SectionCard title={title} description={description}>
+        <SectionCard title={title}>
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing="lg" verticalSpacing="lg">
                 <Card withBorder radius="xl" p="md">
                     <Stack gap="md">

@@ -63,7 +63,7 @@ export function GameDetailsPage() {
             emptyText="Игра не найдена."
         >
             {game ? (
-                <SectionCard title={game.title} description="Карточка игры" action={<Text fw={700} size="xl">{formatPrice(game.price)}</Text>}>
+                <SectionCard title={game.title} action={<Text fw={700} size="xl">{formatPrice(game.price)}</Text>}>
                     <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
                         <InfoCard title="Основная информация">
                             <Text>{game.description}</Text>
@@ -102,7 +102,7 @@ export function DeveloperDetailsPage() {
             emptyText="Разработчик не найден."
         >
             {developer ? (
-                <SectionCard title={developer.name} description="Карточка разработчика">
+                <SectionCard title={developer.name}>
                     <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
                         <InfoCard title="Информация">
                             <Text c="dimmed">Страна: {developer.country}</Text>
@@ -135,7 +135,7 @@ export function PublisherDetailsPage() {
             emptyText="Издатель не найден."
         >
             {publisher ? (
-                <SectionCard title={publisher.name} description="Карточка издателя">
+                <SectionCard title={publisher.name}>
                     <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
                         <InfoCard title="Информация">
                             <Text c="dimmed">Страна: {publisher.country}</Text>
@@ -174,7 +174,7 @@ export function UserDetailsPage() {
             emptyText="Пользователь не найден."
         >
             {user ? (
-                <SectionCard title={user.username} description="Карточка пользователя" action={<Text c="dimmed">Игр в библиотеке: {user.games.length}</Text>}>
+                <SectionCard title={user.username} action={<Text c="dimmed">Игр в библиотеке: {user.games.length}</Text>}>
                     <SimpleGrid cols={{ base: 1, xl: catalogOpen ? 2 : 1 }} spacing="lg">
                         <Card withBorder radius="xl" p="lg">
                             <CatalogPanel

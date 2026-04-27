@@ -9,10 +9,10 @@ export function CatalogPage() {
     const { data: publishers = [] } = usePublishersQuery();
 
     return (
-        <SectionCard title="Каталог" description="Полный список игр с фильтрацией и постраничной навигацией">
+        <SectionCard title="Каталог">
             <Card withBorder radius="xl" p="lg">
                 <CatalogPanel
-                    title="Каталог"
+                    title={null}
                     games={[]}
                     categories={categories}
                     publishers={publishers}
