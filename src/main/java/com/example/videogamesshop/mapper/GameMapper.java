@@ -26,6 +26,16 @@ public class GameMapper {
         response.setId(game.getId());
         response.setTitle(game.getTitle());
         response.setPrice(game.getPrice());
+        response.setReleaseDate(game.getReleaseDate());
+        response.setDescription(game.getDescription());
+        if (game.getDeveloper() != null) {
+            response.setDeveloperId(game.getDeveloper().getId());
+            response.setDeveloperName(game.getDeveloper().getName());
+        }
+        if (game.getPublisher() != null) {
+            response.setPublisherId(game.getPublisher().getId());
+            response.setPublisherName(game.getPublisher().getName());
+        }
         response.setCategories(mapCategories(game));
         return response;
     }

@@ -1,3 +1,4 @@
+import { createTheme, MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppStateProvider } from "@/app/state/AppStateProvider";
 
@@ -10,10 +11,21 @@ const queryClient = new QueryClient({
     }
 });
 
+const theme = createTheme({
+    primaryColor: "blue",
+    defaultRadius: "md",
+    fontFamily: "Segoe UI, Tahoma, Geneva, Verdana, sans-serif",
+    headings: {
+        fontFamily: "Segoe UI, Tahoma, Geneva, Verdana, sans-serif"
+    }
+});
+
 export function AppProviders({ children }) {
     return (
-        <QueryClientProvider client={queryClient}>
-            <AppStateProvider>{children}</AppStateProvider>
-        </QueryClientProvider>
+        <MantineProvider theme={theme} defaultColorScheme="light">
+            <QueryClientProvider client={queryClient}>
+                <AppStateProvider>{children}</AppStateProvider>
+            </QueryClientProvider>
+        </MantineProvider>
     );
 }

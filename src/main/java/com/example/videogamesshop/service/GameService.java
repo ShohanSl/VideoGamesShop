@@ -39,7 +39,7 @@ public class GameService {
     private final GameCacheService cacheService;
 
     public Page<GameCatalogResponse> getAllCatalog(Pageable pageable) {
-        GameQueryKey key = new GameQueryKey(null, pageable);
+        GameQueryKey key = new GameQueryKey(null, null, null, null, pageable);
         Page<GameCatalogResponse> cached = cacheService.get(key);
         if (cached != null) {
             return cached;
@@ -52,13 +52,43 @@ public class GameService {
 
     public Page<GameCatalogResponse> getCatalogByCategories(List<Long> categoryIds,
                                                             Pageable pageable) {
-        GameQueryKey key = new GameQueryKey(categoryIds, pageable);
+        GameQueryKey key = new GameQueryKey(categoryIds, null, null, null, pageable);
         Page<GameCatalogResponse> cached = cacheService.get(key);
         if (cached != null) {
             return cached;
         }
         Page<GameCatalogResponse> result = gameRepository.findByCategoriesWithDetails(categoryIds,
                         pageable)
+                .map(gameMapper::toCatalogResponse);
+        cacheService.put(key, result);
+        return result;
+    }
+
+    public Page<GameCatalogResponse> getCatalog(List<Long> categoryIds,
+                                                List<Long> excludedGameIds,
+                                                Long publisherId,
+                                                String title,
+                                                Pageable pageable) {
+        boolean hasCategoryFilter = categoryIds != null && !categoryIds.isEmpty();
+        boolean hasExclusionFilter = excludedGameIds != null && !excludedGameIds.isEmpty();
+        boolean hasPublisherFilter = publisherId != null;
+        boolean hasTitleFilter = title != null && !title.isBlank();
+
+        if (!hasPublisherFilter && !hasTitleFilter && !hasExclusionFilter) {
+            return hasCategoryFilter
+                    ? getCatalogByCategories(categoryIds, pageable)
+                    : getAllCatalog(pageable);
+        }
+
+        GameQueryKey key = new GameQueryKey(categoryIds, excludedGameIds, publisherId, title,
+                pageable);
+        Page<GameCatalogResponse> cached = cacheService.get(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        Page<GameCatalogResponse> result = gameRepository
+                .findByFiltersWithDetails(categoryIds, excludedGameIds, publisherId, title, pageable)
                 .map(gameMapper::toCatalogResponse);
         cacheService.put(key, result);
         return result;

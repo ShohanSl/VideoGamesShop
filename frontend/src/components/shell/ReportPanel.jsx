@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Button, Card, Stack, Text } from "@mantine/core";
 import { shopApi } from "@/api/shopApi";
 
 function formatReport(result) {
@@ -32,19 +33,17 @@ function getStatusLabel(status) {
     return labels[status] || status;
 }
 
-export function AdminReportPanel() {
+export function ReportPanel({ icon: Icon }) {
     const [taskId, setTaskId] = useState("");
     const [status, setStatus] = useState("");
     const [result, setResult] = useState("");
     const [error, setError] = useState("");
     const pollRef = useRef(null);
 
-    useEffect(() => {
-        return () => {
-            if (pollRef.current) {
-                window.clearTimeout(pollRef.current);
-            }
-        };
+    useEffect(() => () => {
+        if (pollRef.current) {
+            window.clearTimeout(pollRef.current);
+        }
     }, []);
 
     async function pollStatus(nextTaskId) {
@@ -87,16 +86,14 @@ export function AdminReportPanel() {
     const reportText = useMemo(() => formatReport(result), [result]);
 
     return (
-        <div className="report-widget">
-            <button className="nav-link report-trigger" type="button" onClick={handleRunReport}>
-                Отчёт
-            </button>
-            <div className="report-box">
-                {status ? <div className="report-status">{getStatusLabel(status)}</div> : <div className="report-status muted-text">Отчёт ещё не запускался</div>}
-                {taskId ? <div className="report-meta">ID задачи: {taskId}</div> : null}
-                {reportText ? <pre className="report-text">{reportText}</pre> : null}
-                {error ? <div className="report-error">{error}</div> : null}
-            </div>
-        </div>
+        <Card withBorder radius="xl" padding="md">
+            <Stack gap="sm">
+                <Button variant="default" leftSection={Icon ? <Icon size={16} /> : null} onClick={handleRunReport}>Отчёт</Button>
+                <Text size="sm" c={status === "FAILED" ? "red" : "dimmed"}>{status ? getStatusLabel(status) : "Отчёт ещё не запускался"}</Text>
+                {taskId ? <Text size="xs" c="dimmed">ID задачи: {taskId}</Text> : null}
+                {reportText ? <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>{reportText}</Text> : null}
+                {error ? <Text size="sm" c="red">{error}</Text> : null}
+            </Stack>
+        </Card>
     );
 }

@@ -41,12 +41,13 @@ public class GameController {
     public Page<GameCatalogResponse> getCatalog(
             @RequestParam(required = false) List<@Positive
                     (message = "Category id must be positive") Long> categoryIds,
+            @RequestParam(required = false) List<@Positive
+                    (message = "Excluded game id must be positive") Long> excludedGameIds,
+            @RequestParam(required = false) @Positive(message = "Publisher id must be positive")
+            Long publisherId,
+            @RequestParam(required = false) String title,
             @PageableDefault(size = 20, sort = "title") Pageable pageable) {
-
-        if (categoryIds != null && !categoryIds.isEmpty()) {
-            return gameService.getCatalogByCategories(categoryIds, pageable);
-        }
-        return gameService.getAllCatalog(pageable);
+        return gameService.getCatalog(categoryIds, excludedGameIds, publisherId, title, pageable);
     }
 
     @GetMapping("/by-publisher")

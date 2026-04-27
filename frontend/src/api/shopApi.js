@@ -2,23 +2,13 @@ import { httpClient } from "@/api/httpClient";
 import { buildQuery } from "@/utils/format";
 
 export const shopApi = {
-    async getGames(filters = {}, page = 0, size = 9) {
-        if (filters.publisherName) {
-            const { data } = await httpClient.get(
-                `/games/by-publisher${buildQuery({ publisherName: filters.publisherName })}`
-            );
-
-            return {
-                content: data,
-                number: 0,
-                totalPages: 1,
-                totalElements: data.length
-            };
-        }
-
+    async getGames(filters = {}, page = 0, size = 10) {
         const { data } = await httpClient.get(
             `/games${buildQuery({
                 categoryIds: filters.categoryIds,
+                excludedGameIds: filters.excludedGameIds,
+                publisherId: filters.publisherId,
+                title: filters.title,
                 page,
                 size,
                 sort: "title,asc"

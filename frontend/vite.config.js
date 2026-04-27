@@ -5,18 +5,6 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const apiPaths = [
-    "/games",
-    "/developers",
-    "/publishers",
-    "/categories",
-    "/users",
-    "/async-jobs",
-    "/api-docs",
-    "/swagger-ui.html",
-    "/swagger-ui"
-];
-
 export default defineConfig({
     plugins: [react()],
     resolve: {
@@ -26,13 +14,13 @@ export default defineConfig({
     },
     server: {
         port: 5173,
-        proxy: apiPaths.reduce((acc, route) => {
-            acc[route] = {
+        proxy: {
+            "/api": {
                 target: "http://localhost:8080",
-                changeOrigin: true
-            };
-            return acc;
-        }, {})
+                changeOrigin: true,
+                rewrite: (requestPath) => requestPath.replace(/^\/api/, "")
+            }
+        }
     },
     build: {
         outDir: "../src/main/resources/static",

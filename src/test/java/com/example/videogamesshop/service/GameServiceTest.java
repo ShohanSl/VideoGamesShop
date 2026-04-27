@@ -121,6 +121,25 @@ class GameServiceTest {
     }
 
     @Test
+    void shouldReturnCatalogByFilters() {
+        var pageable = PageRequest.of(1, 10);
+        Game game = new Game();
+        game.setId(8L);
+        GameCatalogResponse response = new GameCatalogResponse();
+        response.setId(8L);
+        var page = new PageImpl<>(List.of(game), pageable, 11);
+        when(cacheService.get(any())).thenReturn(null);
+        when(gameRepository.findByFiltersWithDetails(List.of(3L), null, 5L, "war", pageable))
+                .thenReturn(page);
+        when(gameMapper.toCatalogResponse(game)).thenReturn(response);
+
+        var result = gameService.getCatalog(List.of(3L), null, 5L, "war", pageable);
+
+        assertEquals(1, result.getContent().size());
+        verify(cacheService).put(any(), any());
+    }
+
+    @Test
     void shouldReturnGamesByPublisher() {
         Game game = new Game();
         game.setId(3L);
