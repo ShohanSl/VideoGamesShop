@@ -24,12 +24,13 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/videogames_shop
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-postgres_pass}
-      - JWT_SECRET=${JWT_SECRET:-defaultSecretKeyForDevelopmentOnly1234567890}
-      - ADMIN_USERNAME=${ADMIN_USERNAME}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/videogames_shop
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres_pass}
+      JWT_SECRET: ${JWT_SECRET:-defaultSecretKeyForDevelopmentOnly1234567890}
+
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
