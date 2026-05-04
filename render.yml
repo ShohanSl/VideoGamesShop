@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: videogames-shop-app
+    env: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+
+    healthCheckPath: /actuator/health
+
+    envVars:
+      - key: PORT
+        value: 8080
+
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: videogames-shop-db
+          property: connectionString
+
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: videogames-shop-db
+          property: user
+
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: videogames-shop-db
+          property: password
+
+      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
+        value: validate
+
+databases:
+  - name: videogames-shop-db
+    plan: free
+    region: frankfurt
+    databaseName: videogames_shop
