@@ -68,10 +68,15 @@ jobs:
           RENDER_APP_URL: ${{ secrets.RENDER_APP_URL }}
         run: |
           test -n "$RENDER_APP_URL"
-          for attempt in {1..30}; do
+          echo "Waiting for Render deployment to become healthy..."
+          sleep 60
+          for attempt in {1..45}; do
+            echo "Healthcheck attempt $attempt/45"
             if curl -fsS "$RENDER_APP_URL/actuator/health"; then
+              echo "Render service is healthy."
               exit 0
             fi
             sleep 20
           done
+          echo "Render service did not become healthy in time."
           exit 1

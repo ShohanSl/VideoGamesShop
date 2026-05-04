@@ -1,8 +1,11 @@
 #!/bin/sh
 set -eu
 
-if [ -n "${DATABASE_URL:-}" ] && [ -z "${SPRING_DATASOURCE_URL:-}" ]; then
-  db_url="${DATABASE_URL#postgresql://}"
+datasource_url="${SPRING_DATASOURCE_URL:-${DATABASE_URL:-}}"
+
+case "$datasource_url" in
+postgresql://*|postgres://*)
+  db_url="${datasource_url#postgresql://}"
   db_url="${db_url#postgres://}"
   credentials="${db_url%@*}"
   host_and_db="${db_url#*@}"
@@ -15,6 +18,7 @@ if [ -n "${DATABASE_URL:-}" ] && [ -z "${SPRING_DATASOURCE_URL:-}" ]; then
   export SPRING_DATASOURCE_URL="jdbc:postgresql://${host_port}/${database}"
   export SPRING_DATASOURCE_USERNAME="${SPRING_DATASOURCE_USERNAME:-$user}"
   export SPRING_DATASOURCE_PASSWORD="${SPRING_DATASOURCE_PASSWORD:-$password}"
-fi
+  ;;
+esac
 
 exec java $JAVA_OPTS -jar /app/app.jar
