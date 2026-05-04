@@ -20,8 +20,9 @@ WORKDIR /app
 RUN apk add --no-cache curl
 COPY --from=backend-build /app/target/*.jar app.jar
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-EXPOSE 8080
+EXPOSE 10000
+ENV PORT=10000
 ENV JAVA_OPTS=""
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD curl -fsS "http://localhost:${PORT:-8080}/actuator/health" || exit 1
+  CMD curl -fsS "http://localhost:${PORT:-10000}/actuator/health" || exit 1
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
