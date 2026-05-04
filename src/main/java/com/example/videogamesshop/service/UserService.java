@@ -7,6 +7,7 @@ import com.example.videogamesshop.dto.user.UserShortResponse;
 import com.example.videogamesshop.dto.user.UserUpdateRequest;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.User;
+import com.example.videogamesshop.entity.UserRole;
 import com.example.videogamesshop.exception.GameNotFoundException;
 import com.example.videogamesshop.exception.UserNotFoundException;
 import com.example.videogamesshop.mapper.UserMapper;
@@ -29,24 +30,25 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public List<UserShortResponse> getAllUsers() {
-        return userRepository.findAll().stream()
+        return userRepository.findAllByRoleOrderByUsernameAsc(UserRole.USER).stream()
                 .map(UserMapper::toShortResponse)
                 .toList();
     }
 
     public UserFullResponse getUserById(Long id) {
-        return UserMapper.toFullResponse(findUserById(id));
+        return UserMapper.toFullResponse(findRegularUserById(id));
     }
 
     public UserFullResponse createUser(UserCreateRequest request) {
         User user = UserMapper.toEntity(request);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(UserRole.USER);
         User saved = userRepository.save(user);
         return UserMapper.toFullResponse(saved);
     }
 
     public UserFullResponse updateUser(Long id, UserUpdateRequest request) {
-        User user = findUserById(id);
+        User user = findRegularUserById(id);
         UserMapper.updateEntity(user, request);
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
@@ -55,7 +57,7 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
-        User user = findUserById(id);
+        User user = findRegularUserById(id);
         for (Game game : user.getGames()) {
             game.getLibraries().remove(user);
         }
@@ -72,7 +74,7 @@ public class UserService {
     }
 
     private void updateUserGameRelation(Long userId, Long gameId, boolean attachGame) {
-        User user = findUserById(userId);
+        User user = findRegularUserById(userId);
         Game game = findGameById(gameId);
         if (attachGame) {
             user.addGame(game);
@@ -85,6 +87,11 @@ public class UserService {
 
     private User findUserById(Long id) {
         return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    private User findRegularUserById(Long id) {
+        return userRepository.findByIdAndRole(id, UserRole.USER)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 

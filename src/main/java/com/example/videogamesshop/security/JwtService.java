@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class JwtService {
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(expirationSeconds);
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(principal.username())
                 .claim("role", principal.role())
                 .claim("userId", principal.userId())
@@ -36,12 +38,7 @@ public class JwtService {
     }
 
     public JwtPrincipal parseToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(signingKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
+        Claims claims = parseClaims(token);
         Number userIdClaim = claims.get("userId", Number.class);
         Long userId = userIdClaim != null ? userIdClaim.longValue() : null;
         return new JwtPrincipal(
@@ -49,5 +46,22 @@ public class JwtService {
                 claims.getSubject(),
                 claims.get("role", String.class)
         );
+    }
+
+    public String extractTokenId(String token) {
+        return parseClaims(token).getId();
+    }
+
+    public Instant extractExpiration(String token) {
+        return parseClaims(token).getExpiration().toInstant();
+    }
+
+    private Claims parseClaims(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims;
     }
 }

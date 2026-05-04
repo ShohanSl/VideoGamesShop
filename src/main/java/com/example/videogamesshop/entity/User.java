@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,6 +38,10 @@ public class User {
 
     @Column(name = "password_hash")
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private UserRole role = UserRole.USER;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/async-jobs")
+@RequestMapping("/api/async-jobs")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Async jobs", description = "Async business operations with task tracking")

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/concurrency/race-condition")
+@RequestMapping("/api/concurrency/race-condition")
 @RequiredArgsConstructor
 @Tag(name = "Concurrency", description = "Race condition demonstration endpoints")
 public class RaceConditionController {

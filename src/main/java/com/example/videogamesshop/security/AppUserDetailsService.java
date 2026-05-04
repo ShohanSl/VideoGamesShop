@@ -1,9 +1,9 @@
 package com.example.videogamesshop.security;
 
 import com.example.videogamesshop.entity.User;
+import com.example.videogamesshop.entity.UserRole;
 import com.example.videogamesshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,20 +14,9 @@ import org.springframework.stereotype.Service;
 public class AppUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final AdminCredentialsProperties adminCredentials;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if (adminCredentials.getUsername().equals(username)) {
-            return new AppUserDetails(
-                    null,
-                    adminCredentials.getUsername(),
-                    passwordEncoder.encode(adminCredentials.getPassword()),
-                    "ADMIN"
-            );
-        }
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
 
@@ -39,7 +28,7 @@ public class AppUserDetailsService implements UserDetailsService {
                 user.getId(),
                 user.getUsername(),
                 user.getPasswordHash(),
-                "USER"
+                (user.getRole() == null ? UserRole.USER : user.getRole()).name()
         );
     }
 }

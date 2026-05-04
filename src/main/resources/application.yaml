@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   tomcat:
     threads:
       max: 400
@@ -25,9 +25,9 @@ spring:
         use_sql_comments: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/videogames_shop
-    username: postgres
-    password: ${DB_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/videogames_shop}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:postgres}}
     hikari:
       pool-name: VideoGamesShopHikariPool
       minimum-idle: 20
@@ -48,10 +48,6 @@ app:
   jwt:
     secret: ${JWT_SECRET:verySecretJwtKeyForVideoGamesShopChangeMe1234567890}
     expiration-seconds: ${JWT_EXPIRATION_SECONDS:43200}
-  security:
-    admin:
-      username: ${ADMIN_USERNAME:admin}
-      password: ${ADMIN_PASSWORD:ChangeMeAdmin123!}
 
 management:
   endpoints:

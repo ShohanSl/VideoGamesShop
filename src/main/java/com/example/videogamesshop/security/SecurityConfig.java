@@ -46,34 +46,48 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
-                        .requestMatchers("/auth/**", "/api-docs/**", "/swagger-ui/**",
-                                "/swagger-ui.html", "/error", "/login/**", "/admin/**", "/user/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/games/**", "/developers/**", "/publishers/**",
-                                "/categories/**").authenticated()
-                        .requestMatchers("/async-jobs/**", "/counter/**", "/concurrency/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/users/*/games/*").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/users/*/games/*").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/developers").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/developers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/developers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/developers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/publishers").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/publishers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/publishers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/publishers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/categories").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/games/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/games/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/games/**").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/assets/**",
+                                "/favicon.ico",
+                                "/catalog",
+                                "/library",
+                                "/games/**",
+                                "/developers/**",
+                                "/publishers/**",
+                                "/management/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers("/api-docs/**", "/swagger-ui/**",
+                                "/swagger-ui.html", "/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/games/**", "/api/developers/**",
+                                "/api/publishers/**", "/api/categories/**").authenticated()
+                        .requestMatchers("/api/async-jobs/**", "/api/counter/**",
+                                "/api/concurrency/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/users/*/games/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*/games/*").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/developers").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/developers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/developers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/developers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/publishers").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/publishers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/publishers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/publishers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/categories").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/games/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/games/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/games/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/publishers")
+@RequestMapping("/api/publishers")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Publishers", description = "Operations for managing publishers")

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Alert,
     Button,
@@ -24,127 +24,28 @@ function EntryCard({ children }) {
     );
 }
 
-function LoginForm({
-    title,
-    submitLabel,
-    onSubmit,
-    loading,
-    error,
-    onBack,
-    username,
-    setUsername,
-    password,
-    setPassword
-}) {
-    return (
-        <EntryCard>
-            <Stack gap={6}>
-                <Text c="blue" fw={700} tt="uppercase" size="xs">Video Games Shop</Text>
-                <Title order={2}>{title}</Title>
-            </Stack>
-            <form onSubmit={onSubmit}>
-                <Stack gap="md">
-                    <TextInput
-                        label="Имя пользователя"
-                        value={username}
-                        autoComplete="username"
-                        onChange={(event) => setUsername(event.currentTarget.value)}
-                    />
-                    <PasswordInput
-                        label="Пароль"
-                        value={password}
-                        autoComplete="current-password"
-                        onChange={(event) => setPassword(event.currentTarget.value)}
-                    />
-                    {error ? <Alert color="red">{error}</Alert> : null}
-                    <Button type="submit" loading={loading}>{submitLabel}</Button>
-                    <Button variant="default" type="button" onClick={onBack}>Назад</Button>
-                </Stack>
-            </form>
-        </EntryCard>
-    );
-}
-
-export function RoleSelectionPage() {
+export function LoginPage() {
     const navigate = useNavigate();
-
-    return (
-        <EntryCard>
-            <Stack gap={6}>
-                <Text c="blue" fw={700} tt="uppercase" size="xs">Video Games Shop</Text>
-                <Title order={2}>Выберите режим входа</Title>
-            </Stack>
-            <Button size="md" onClick={() => navigate("/login/user")}>
-                Войти как пользователь
-            </Button>
-            <Button size="md" variant="default" onClick={() => navigate("/login/admin")}>
-                Войти как администратор
-            </Button>
-        </EntryCard>
-    );
-}
-
-export function AdminLoginPage() {
-    const navigate = useNavigate();
-    const { enterAdmin } = useSession();
-    const [loading, setLoading] = useState(false);
-    const [username, setUsername] = useState("admin");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-
-    async function handleSubmit(event) {
-        event.preventDefault();
-        setLoading(true);
-        setError("");
-        try {
-            const auth = await shopApi.loginAdmin(username.trim(), password);
-            enterAdmin(auth.token);
-            navigate("/admin/catalog");
-        } catch (requestError) {
-            setError(requestError.message);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    return (
-        <LoginForm
-            title="Вход администратора"
-            submitLabel="Продолжить"
-            onSubmit={handleSubmit}
-            loading={loading}
-            error={error}
-            onBack={() => navigate("/")}
-            username={username}
-            setUsername={(value) => {
-                setUsername(value);
-                setError("");
-            }}
-            password={password}
-            setPassword={(value) => {
-                setPassword(value);
-                setError("");
-            }}
-        />
-    );
-}
-
-export function UserLoginPage() {
-    const navigate = useNavigate();
-    const { enterUser } = useSession();
+    const { enterSession, isAuthenticated } = useSession();
     const [loading, setLoading] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate("/catalog", { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
+
     async function handleSubmit(event) {
         event.preventDefault();
         setLoading(true);
         setError("");
         try {
-            const auth = await shopApi.loginUser(username.trim(), password);
-            enterUser({ id: auth.userId, username: auth.username }, auth.token);
-            navigate("/user/catalog");
+            const auth = await shopApi.login(username.trim(), password);
+            enterSession(auth);
+            navigate("/catalog", { replace: true });
         } catch (requestError) {
             setError(requestError.message);
         } finally {
@@ -153,23 +54,35 @@ export function UserLoginPage() {
     }
 
     return (
-        <LoginForm
-            title="Вход пользователя"
-            submitLabel="Продолжить"
-            onSubmit={handleSubmit}
-            loading={loading}
-            error={error}
-            onBack={() => navigate("/")}
-            username={username}
-            setUsername={(value) => {
-                setUsername(value);
-                setError("");
-            }}
-            password={password}
-            setPassword={(value) => {
-                setPassword(value);
-                setError("");
-            }}
-        />
+        <EntryCard>
+            <Stack gap={6}>
+                <Text c="blue" fw={700} tt="uppercase" size="xs">Video Games Shop</Text>
+                <Title order={2}>Вход</Title>
+            </Stack>
+            <form onSubmit={handleSubmit}>
+                <Stack gap="md">
+                    <TextInput
+                        label="Имя пользователя"
+                        value={username}
+                        autoComplete="username"
+                        onChange={(event) => {
+                            setUsername(event.currentTarget.value);
+                            setError("");
+                        }}
+                    />
+                    <PasswordInput
+                        label="Пароль"
+                        value={password}
+                        autoComplete="current-password"
+                        onChange={(event) => {
+                            setPassword(event.currentTarget.value);
+                            setError("");
+                        }}
+                    />
+                    {error ? <Alert color="red">{error}</Alert> : null}
+                    <Button type="submit" loading={loading}>Продолжить</Button>
+                </Stack>
+            </form>
+        </EntryCard>
     );
 }

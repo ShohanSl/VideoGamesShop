@@ -14,6 +14,7 @@ import com.example.videogamesshop.dto.user.UserShortResponse;
 import com.example.videogamesshop.dto.user.UserUpdateRequest;
 import com.example.videogamesshop.entity.Game;
 import com.example.videogamesshop.entity.User;
+import com.example.videogamesshop.entity.UserRole;
 import com.example.videogamesshop.exception.GameNotFoundException;
 import com.example.videogamesshop.exception.UserNotFoundException;
 import com.example.videogamesshop.repository.GameRepository;
@@ -50,7 +51,8 @@ class UserServiceTest {
         User user = new User();
         user.setId(1L);
         user.setUsername("alice");
-        when(userRepository.findAll()).thenReturn(List.of(user));
+        user.setRole(UserRole.USER);
+        when(userRepository.findAllByRoleOrderByUsernameAsc(UserRole.USER)).thenReturn(List.of(user));
 
         List<UserShortResponse> result = userService.getAllUsers();
 
@@ -63,7 +65,8 @@ class UserServiceTest {
         User user = new User();
         user.setId(2L);
         user.setUsername("bob");
-        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        user.setRole(UserRole.USER);
+        when(userRepository.findByIdAndRole(2L, UserRole.USER)).thenReturn(Optional.of(user));
 
         UserFullResponse result = userService.getUserById(2L);
 
@@ -80,6 +83,7 @@ class UserServiceTest {
         saved.setId(1L);
         saved.setUsername("player_one");
         saved.setPasswordHash("encoded-password");
+        saved.setRole(UserRole.USER);
 
         when(passwordEncoder.encode("StrongPass123!")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(saved);
@@ -96,10 +100,11 @@ class UserServiceTest {
         User user = new User();
         user.setId(3L);
         user.setUsername("old_name");
+        user.setRole(UserRole.USER);
         UserUpdateRequest request = new UserUpdateRequest();
         request.setUsername("new_name");
         request.setPassword("NewStrongPass123!");
-        when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndRole(3L, UserRole.USER)).thenReturn(Optional.of(user));
         when(passwordEncoder.encode("NewStrongPass123!")).thenReturn("encoded-new-password");
 
         UserFullResponse result = userService.updateUser(3L, request);
@@ -112,9 +117,10 @@ class UserServiceTest {
     void shouldAddGameToUser() {
         User user = new User();
         user.setId(1L);
+        user.setRole(UserRole.USER);
         Game game = new Game();
         game.setId(2L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndRole(1L, UserRole.USER)).thenReturn(Optional.of(user));
         when(gameRepository.findById(2L)).thenReturn(Optional.of(game));
 
         userService.addGameToUser(1L, 2L);
@@ -128,7 +134,8 @@ class UserServiceTest {
     void shouldThrowWhenAddingMissingGameToUser() {
         User user = new User();
         user.setId(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        user.setRole(UserRole.USER);
+        when(userRepository.findByIdAndRole(1L, UserRole.USER)).thenReturn(Optional.of(user));
         when(gameRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(GameNotFoundException.class, () -> userService.addGameToUser(1L, 99L));
@@ -138,10 +145,11 @@ class UserServiceTest {
     void shouldRemoveGameFromUser() {
         User user = new User();
         user.setId(4L);
+        user.setRole(UserRole.USER);
         Game game = new Game();
         game.setId(5L);
         user.addGame(game);
-        when(userRepository.findById(4L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndRole(4L, UserRole.USER)).thenReturn(Optional.of(user));
         when(gameRepository.findById(5L)).thenReturn(Optional.of(game));
 
         userService.removeGameFromUser(4L, 5L);
@@ -153,7 +161,7 @@ class UserServiceTest {
 
     @Test
     void shouldThrowWhenRemovingGameFromMissingUser() {
-        when(userRepository.findById(77L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndRole(77L, UserRole.USER)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.removeGameFromUser(77L, 5L));
     }
@@ -162,10 +170,11 @@ class UserServiceTest {
     void shouldDeleteUserAndCleanupRelations() {
         User user = new User();
         user.setId(1L);
+        user.setRole(UserRole.USER);
         Game game = new Game();
         game.getLibraries().add(user);
         user.getGames().add(game);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findByIdAndRole(1L, UserRole.USER)).thenReturn(Optional.of(user));
 
         userService.deleteUser(1L);
 
@@ -176,14 +185,14 @@ class UserServiceTest {
 
     @Test
     void shouldThrowWhenUserMissing() {
-        when(userRepository.findById(50L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndRole(50L, UserRole.USER)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getUserById(50L));
     }
 
     @Test
     void shouldThrowWhenDeletingMissingUser() {
-        when(userRepository.findById(51L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndRole(51L, UserRole.USER)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.deleteUser(51L));
     }

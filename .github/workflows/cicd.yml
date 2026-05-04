@@ -2,84 +2,73 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-test-healthcheck:
+  build-test-deploy:
+    name: Build, test, deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: "17"
+          cache: maven
 
-      - name: Make Maven wrapper executable
-        run: chmod +x mvnw
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      # --- ТЕСТЫ ---
-      - name: Run tests
-        run: ./mvnw clean test
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run backend tests
         env:
+          JWT_SECRET: test_secret_key_for_ci_32_characters_min
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/videogames_shop
           SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: 1234
-          SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+          SPRING_DATASOURCE_PASSWORD: postgres
+        run: ./mvnw -B test
 
-      # --- СБОРКА ---
       - name: Build Docker image
-        run: docker build -t videogames-shop-app .
+        run: docker build -t videogames-shop:${{ github.sha }} .
 
-      # --- ЗАПУСК ---
-      - name: Start app with Docker Compose
+      - name: Trigger Render deploy
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          POSTGRES_USER=postgres \
-          POSTGRES_PASSWORD=1234 \
-          POSTGRES_DB=videogames_shop \
-          POSTGRES_PORT=5432 \
-          APP_PORT=8080 \
-          ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }} \
-          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }} \
-          docker compose up -d --build
+          test -n "$RENDER_DEPLOY_HOOK_URL"
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
 
-      # --- HEALTHCHECK ---
-      - name: Wait for healthcheck
+      - name: Healthcheck Render service
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        env:
+          RENDER_APP_URL: ${{ secrets.RENDER_APP_URL }}
         run: |
-          for i in {1..30}; do
-            if curl -f http://localhost:8080/actuator/health; then
-              echo "Application is healthy"
+          test -n "$RENDER_APP_URL"
+          for attempt in {1..30}; do
+            if curl -fsS "$RENDER_APP_URL/actuator/health"; then
               exit 0
             fi
-            echo "Waiting for application..."
-            sleep 5
+            sleep 20
           done
-          docker compose logs
           exit 1
-
-      # --- ОСТАНОВКА ---
-      - name: Stop Docker Compose
-        if: always()
-        run: |
-          POSTGRES_USER=postgres \
-          POSTGRES_PASSWORD=1234 \
-          POSTGRES_DB=videogames_shop \
-          POSTGRES_PORT=5432 \
-          APP_PORT=8080 \
-          SPRING_JPA_HIBERNATE_DDL_AUTO=validate \
-          docker compose down
-
-  # --- DEPLOY ---
-  deploy:
-    needs: build-test-healthcheck
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy to Render
-        run: curl "$RENDER_DEPLOY_HOOK"
-        env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}

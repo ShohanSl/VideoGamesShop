@@ -7,7 +7,7 @@ import { useAppState } from "@/app/state/appStateContext";
 import { CatalogPanel } from "@/components/catalog/CatalogPanel";
 import { SectionCard } from "@/components/ui/SectionCard";
 
-function CatalogLayout({ gameHrefBuilder, actionRenderer }) {
+function CatalogLayout({ actionRenderer }) {
     const { data: categories = [] } = useCategoriesQuery();
     const { data: publishers = [] } = usePublishersQuery();
 
@@ -21,7 +21,7 @@ function CatalogLayout({ gameHrefBuilder, actionRenderer }) {
                     publishers={publishers}
                     pageSize={10}
                     remoteFetch={shopApi.getGames}
-                    gameHrefBuilder={gameHrefBuilder}
+                    gameHrefBuilder={(gameId) => `/games/${gameId}`}
                     actionRenderer={actionRenderer}
                 />
             </Card>
@@ -29,34 +29,27 @@ function CatalogLayout({ gameHrefBuilder, actionRenderer }) {
     );
 }
 
-export function AdminCatalogPage() {
-    return <CatalogLayout gameHrefBuilder={(gameId) => `/admin/games/${gameId}`} />;
-}
-
-export function UserCatalogPage() {
-    const { currentUser } = useSession();
+export function CatalogPage() {
+    const { currentUser, isUser } = useSession();
     const { addGameToLibrary } = useAppState();
-    const userQuery = useUserQuery(currentUser?.id);
+    const userQuery = useUserQuery(isUser ? currentUser?.id : undefined);
     const ownedGameIds = useMemo(
         () => new Set((userQuery.data?.games || []).map((game) => game.id)),
         [userQuery.data]
     );
 
-    return (
-        <CatalogLayout
-            gameHrefBuilder={(gameId) => `/user/games/${gameId}`}
-            actionRenderer={(game) => (
-                ownedGameIds.has(game.id) ? (
-                    <Badge variant="light" color="green" radius="xl">В библиотеке</Badge>
-                ) : (
-                    <Button onClick={() => void addGameToLibrary(currentUser.id, game.id)}>Купить</Button>
-                )
-            )}
-        />
-    );
+    const actionRenderer = isUser ? (game) => (
+        ownedGameIds.has(game.id) ? (
+            <Badge variant="light" color="green" radius="xl">В библиотеке</Badge>
+        ) : (
+            <Button onClick={() => void addGameToLibrary(currentUser.id, game.id)}>Купить</Button>
+        )
+    ) : undefined;
+
+    return <CatalogLayout actionRenderer={actionRenderer} />;
 }
 
-export function UserLibraryPage() {
+export function LibraryPage() {
     const { currentUser } = useSession();
     const userQuery = useUserQuery(currentUser?.id);
 
@@ -86,7 +79,7 @@ export function UserLibraryPage() {
                     publishers={[]}
                     showFilters={false}
                     pageSize={10}
-                    gameHrefBuilder={(gameId) => `/user/games/${gameId}`}
+                    gameHrefBuilder={(gameId) => `/games/${gameId}`}
                     emptyText="Библиотека пока пуста."
                 />
             </Card>

@@ -308,7 +308,7 @@ export function GamesPage() {
     const games = gamesQuery.data?.content || [];
 
     const columns = useMemo(() => [
-        { header: STR.name, cell: ({ row }) => linkCell(`/admin/games/${row.original.id}`, row.original.title) },
+        { header: STR.name, cell: ({ row }) => linkCell(`/games/${row.original.id}`, row.original.title) },
         { header: STR.developer, accessorFn: (row) => row.developerName },
         { header: STR.publisher, accessorFn: (row) => row.publisherName },
         { header: STR.price, cell: ({ row }) => formatPrice(row.original.price) },
@@ -423,7 +423,7 @@ export function DevelopersPage() {
     const { data: categories = [] } = useCategoriesQuery();
 
     const columns = useMemo(() => [
-        { header: STR.name, cell: ({ row }) => linkCell(`/admin/developers/${row.original.id}`, row.original.name) },
+        { header: STR.name, cell: ({ row }) => linkCell(`/developers/${row.original.id}`, row.original.name) },
         { header: STR.country, accessorFn: (row) => row.country },
         { header: STR.foundedDate, cell: ({ row }) => formatDate(row.original.foundedDate) },
         {
@@ -512,7 +512,7 @@ export function PublishersPage() {
     const { data: publishers = [] } = usePublishersQuery();
 
     const columns = useMemo(() => [
-        { header: STR.name, cell: ({ row }) => linkCell(`/admin/publishers/${row.original.id}`, row.original.name) },
+        { header: STR.name, cell: ({ row }) => linkCell(`/publishers/${row.original.id}`, row.original.name) },
         { header: STR.country, accessorFn: (row) => row.country },
         { header: STR.foundedDate, cell: ({ row }) => formatDate(row.original.foundedDate) },
         {
@@ -634,7 +634,7 @@ export function UsersPage() {
     const { data: users = [] } = useUsersQuery();
 
     const columns = useMemo(() => [
-        { header: STR.username, cell: ({ row }) => linkCell(`/admin/users/${row.original.id}`, row.original.username) },
+        { header: STR.username, cell: ({ row }) => linkCell(`/management/users/${row.original.id}`, row.original.username) },
         {
             header: STR.actions,
             cell: ({ row }) => (

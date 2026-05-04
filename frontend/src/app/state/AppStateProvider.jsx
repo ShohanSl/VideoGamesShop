@@ -196,7 +196,7 @@ export function AppStateProvider({ children }) {
         await invalidateQueries(queryClient, [
             shopKeys.user(userId),
             ["user-catalog", userId],
-            ["admin-user-catalog", userId]
+            ["management-user-catalog", userId]
         ]);
     }
 
@@ -205,7 +205,7 @@ export function AppStateProvider({ children }) {
         await invalidateQueries(queryClient, [
             shopKeys.user(userId),
             ["user-catalog", userId],
-            ["admin-user-catalog", userId]
+            ["management-user-catalog", userId]
         ]);
     }
 

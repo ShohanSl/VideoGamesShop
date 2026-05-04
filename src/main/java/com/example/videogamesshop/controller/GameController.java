@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/games")
+@RequestMapping("/api/games")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Games", description = "Operations for managing games")

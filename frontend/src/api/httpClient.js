@@ -3,7 +3,7 @@ import axios from "axios";
 const SESSION_STORAGE_KEY = "video-games-shop-session";
 
 export const httpClient = axios.create({
-    baseURL: import.meta.env.DEV ? "/api" : "",
+    baseURL: "/api",
     headers: {
         "Content-Type": "application/json"
     }

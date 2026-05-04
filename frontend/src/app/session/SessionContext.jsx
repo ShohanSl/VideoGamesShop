@@ -14,6 +14,7 @@ function readSession() {
         if (!raw) {
             return { role: null, user: null, token: null };
         }
+
         const parsed = JSON.parse(raw);
         return {
             role: parsed?.role || null,
@@ -45,11 +46,17 @@ export function SessionProvider({ children }) {
         role: session.role,
         currentUser: session.user,
         token: session.token,
-        enterAdmin(token) {
-            setSession({ role: "admin", user: null, token });
-        },
-        enterUser(user, token) {
-            setSession({ role: "user", user, token });
+        isAuthenticated: Boolean(session.token),
+        isAdmin: session.role === "admin",
+        isUser: session.role === "user",
+        enterSession(auth) {
+            setSession({
+                role: auth.role?.toLowerCase() || null,
+                user: auth.userId && auth.username
+                    ? { id: auth.userId, username: auth.username }
+                    : null,
+                token: auth.token || null
+            });
         },
         resetSession() {
             setSession({ role: null, user: null, token: null });

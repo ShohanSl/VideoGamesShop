@@ -1,11 +1,15 @@
 package com.example.videogamesshop.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.videogamesshop.dto.auth.AuthResponse;
 import com.example.videogamesshop.dto.auth.LoginRequest;
+import com.example.videogamesshop.entity.User;
+import com.example.videogamesshop.entity.UserRole;
+import com.example.videogamesshop.repository.UserRepository;
 import com.example.videogamesshop.security.AppUserDetails;
 import com.example.videogamesshop.security.JwtPrincipal;
 import com.example.videogamesshop.security.JwtService;
@@ -17,9 +21,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -31,7 +35,16 @@ class AuthServiceTest {
     private JwtService jwtService;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
     private Authentication authentication;
+
+    @Mock
+    private RevokedTokenService revokedTokenService;
 
     @Captor
     private ArgumentCaptor<JwtPrincipal> principalCaptor;
@@ -40,27 +53,7 @@ class AuthServiceTest {
     private AuthService authService;
 
     @Test
-    void shouldAuthenticateAdmin() {
-        LoginRequest request = new LoginRequest();
-        request.setUsername("admin");
-        request.setPassword("ChangeMeAdmin123!");
-        AppUserDetails userDetails = new AppUserDetails(null, "admin", "encoded", "ADMIN");
-
-        when(authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated("admin", "ChangeMeAdmin123!")
-        )).thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn(userDetails);
-        when(jwtService.generateToken(principalCaptor.capture())).thenReturn("jwt-token");
-
-        AuthResponse response = authService.authenticateAdmin(request);
-
-        assertEquals("jwt-token", response.getToken());
-        assertEquals("ADMIN", response.getRole());
-        assertEquals("admin", principalCaptor.getValue().username());
-    }
-
-    @Test
-    void shouldAuthenticateUser() {
+    void shouldAuthenticateExistingUser() {
         LoginRequest request = new LoginRequest();
         request.setUsername("player_one");
         request.setPassword("StrongPass123!");
@@ -72,7 +65,7 @@ class AuthServiceTest {
         when(authentication.getPrincipal()).thenReturn(userDetails);
         when(jwtService.generateToken(principalCaptor.capture())).thenReturn("jwt-token");
 
-        AuthResponse response = authService.authenticateUser(request);
+        AuthResponse response = authService.authenticate(request);
 
         assertEquals("jwt-token", response.getToken());
         assertEquals("USER", response.getRole());
@@ -81,17 +74,34 @@ class AuthServiceTest {
     }
 
     @Test
-    void shouldRejectAdminLoginForUserAccount() {
+    void shouldBootstrapFirstAdmin() {
         LoginRequest request = new LoginRequest();
-        request.setUsername("player_one");
-        request.setPassword("StrongPass123!");
-        AppUserDetails userDetails = new AppUserDetails(5L, "player_one", "encoded", "USER");
+        request.setUsername("admin");
+        request.setPassword("ChangeMeAdmin123!");
+        User savedAdmin = new User();
+        savedAdmin.setId(11L);
+        savedAdmin.setUsername("admin");
+        savedAdmin.setRole(UserRole.ADMIN);
+        savedAdmin.setPasswordHash("encoded-admin-password");
 
-        when(authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated("player_one", "StrongPass123!")
-        )).thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn(userDetails);
+        when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(0L);
+        when(passwordEncoder.encode("ChangeMeAdmin123!")).thenReturn("encoded-admin-password");
+        when(userRepository.save(any(User.class))).thenReturn(savedAdmin);
+        when(jwtService.generateToken(principalCaptor.capture())).thenReturn("jwt-token");
 
-        assertThrows(BadCredentialsException.class, () -> authService.authenticateAdmin(request));
+        AuthResponse response = authService.authenticate(request);
+
+        assertEquals("jwt-token", response.getToken());
+        assertEquals("ADMIN", response.getRole());
+        assertEquals(11L, response.getUserId());
+        assertEquals("admin", response.getUsername());
+        verify(passwordEncoder).encode("ChangeMeAdmin123!");
+    }
+
+    @Test
+    void shouldRevokeTokenOnLogout() {
+        authService.logout("Bearer jwt-token");
+
+        verify(revokedTokenService).revoke("jwt-token");
     }
 }

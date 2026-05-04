@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/developers")
+@RequestMapping("/api/developers")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Developers", description = "Operations for managing developers")

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/counter")
+@RequestMapping("/api/counter")
 @RequiredArgsConstructor
 @Tag(name = "Counter", description = "Counter scenarios for a prototype service with nested static classes")
 public class CounterController {
