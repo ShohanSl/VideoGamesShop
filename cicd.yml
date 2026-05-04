@@ -43,6 +43,8 @@ jobs:
           POSTGRES_PORT=5432 \
           APP_PORT=8080 \
           SPRING_JPA_HIBERNATE_DDL_AUTO=validate \
+          ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }} \
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }} \
           docker compose up -d --build
 
       # --- HEALTHCHECK ---
