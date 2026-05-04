@@ -1,5 +1,6 @@
 import { createTheme, MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SessionProvider } from "@/app/session/SessionContext";
 import { AppStateProvider } from "@/app/state/AppStateProvider";
 
 const queryClient = new QueryClient({
@@ -24,7 +25,9 @@ export function AppProviders({ children }) {
     return (
         <MantineProvider theme={theme} defaultColorScheme="light">
             <QueryClientProvider client={queryClient}>
-                <AppStateProvider>{children}</AppStateProvider>
+                <SessionProvider>
+                    <AppStateProvider>{children}</AppStateProvider>
+                </SessionProvider>
             </QueryClientProvider>
         </MantineProvider>
     );

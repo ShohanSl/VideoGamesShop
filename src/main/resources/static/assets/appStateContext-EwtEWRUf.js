@@ -1,1 +1,0 @@
-import{_n as e,yn as t}from"./createReactComponent-DozcIoo3.js";var n=t(e(),1),r=(0,n.createContext)(null);function i(){let e=(0,n.useContext)(r);if(!e)throw Error(`useAppState must be used inside AppStateProvider`);return e}export{i as n,r as t};

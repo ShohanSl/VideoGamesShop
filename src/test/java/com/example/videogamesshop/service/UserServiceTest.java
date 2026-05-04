@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -37,6 +38,9 @@ class UserServiceTest {
 
     @Mock
     private GameCacheService cacheService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -71,16 +75,20 @@ class UserServiceTest {
     void shouldCreateUser() {
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername("player_one");
+        request.setPassword("StrongPass123!");
         User saved = new User();
         saved.setId(1L);
         saved.setUsername("player_one");
+        saved.setPasswordHash("encoded-password");
 
+        when(passwordEncoder.encode("StrongPass123!")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(saved);
 
         UserFullResponse result = userService.createUser(request);
 
         assertEquals(1L, result.getId());
         assertEquals("player_one", result.getUsername());
+        verify(passwordEncoder).encode("StrongPass123!");
     }
 
     @Test
@@ -90,11 +98,14 @@ class UserServiceTest {
         user.setUsername("old_name");
         UserUpdateRequest request = new UserUpdateRequest();
         request.setUsername("new_name");
+        request.setPassword("NewStrongPass123!");
         when(userRepository.findById(3L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("NewStrongPass123!")).thenReturn("encoded-new-password");
 
         UserFullResponse result = userService.updateUser(3L, request);
 
         assertEquals("new_name", result.getUsername());
+        assertEquals("encoded-new-password", user.getPasswordHash());
     }
 
     @Test

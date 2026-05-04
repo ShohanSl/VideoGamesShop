@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Group, MultiSelect, NumberInput, Select, Stack, Textarea, TextInput, Title } from "@mantine/core";
+import { Button, Group, MultiSelect, NumberInput, PasswordInput, Select, Stack, Textarea, TextInput, Title } from "@mantine/core";
 import { Controller, useForm } from "react-hook-form";
 
 function renderField(field, form) {
@@ -15,6 +15,26 @@ function renderField(field, form) {
                 minRows={field.minRows || 3}
                 error={error}
                 {...register(field.name)}
+            />
+        );
+    }
+
+    if (field.type === "password") {
+        return (
+            <Controller
+                key={field.name}
+                name={field.name}
+                control={control}
+                render={({ field: controllerField }) => (
+                    <PasswordInput
+                        label={field.label}
+                        value={controllerField.value ?? ""}
+                        onChange={controllerField.onChange}
+                        error={error}
+                        autoComplete={field.autoComplete}
+                        disabled={field.disabled}
+                    />
+                )}
             />
         );
     }
@@ -89,6 +109,7 @@ function renderField(field, form) {
             type={field.type || "text"}
             error={error}
             disabled={field.disabled}
+            autoComplete={field.autoComplete}
             {...register(field.name)}
         />
     );

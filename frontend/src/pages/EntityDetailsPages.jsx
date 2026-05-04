@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Anchor, Badge, Button, Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { Link, useParams } from "react-router-dom";
-import { shopApi } from "@/api/shopApi";
 import {
     useCategoriesQuery,
     useDeveloperQuery,
@@ -10,9 +9,11 @@ import {
     usePublisherQuery,
     useUserQuery
 } from "@/api/shopQueries";
-import { CatalogIconButton, CatalogPanel } from "@/components/catalog/CatalogPanel";
-import { SectionCard } from "@/components/ui/SectionCard";
+import { useSession } from "@/app/session/SessionContext";
 import { useAppState } from "@/app/state/appStateContext";
+import { CatalogIconButton, CatalogPanel } from "@/components/catalog/CatalogPanel";
+import { shopApi } from "@/api/shopApi";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { formatDate, formatPrice } from "@/utils/format";
 
 function EmptyState({ text }) {
@@ -50,10 +51,30 @@ function QueryState({ isPending, isError, error, emptyText, children }) {
     return children;
 }
 
-export function GameDetailsPage() {
+function GameDetailsView({ mode }) {
     const { gameId } = useParams();
+    const { currentUser } = useSession();
+    const { addGameToLibrary } = useAppState();
     const query = useGameQuery(gameId);
+    const currentUserQuery = useUserQuery(currentUser?.id);
     const game = query.data;
+    const developerHref = `/${mode}/developers/${game?.developerId}`;
+    const publisherHref = `/${mode}/publishers/${game?.publisherId}`;
+    const isOwnedByCurrentUser = mode === "user"
+        && Boolean(currentUserQuery.data?.games?.some((item) => item.id === game?.id));
+    const gameAction = mode === "user" ? (
+        isOwnedByCurrentUser ? (
+            <Badge variant="light" color="green" radius="xl">В библиотеке</Badge>
+        ) : (
+            <Button onClick={() => void addGameToLibrary(currentUser.id, game.id)}>Купить</Button>
+        )
+    ) : null;
+    const sectionAction = (
+        <Group gap="sm" align="center">
+            <Text fw={700} size="xl">{game ? formatPrice(game.price) : null}</Text>
+            {gameAction}
+        </Group>
+    );
 
     return (
         <QueryState
@@ -63,16 +84,16 @@ export function GameDetailsPage() {
             emptyText="Игра не найдена."
         >
             {game ? (
-                <SectionCard title={game.title} action={<Text fw={700} size="xl">{formatPrice(game.price)}</Text>}>
+                <SectionCard title={game.title} action={sectionAction}>
                     <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
                         <InfoCard title="Основная информация">
                             <Text>{game.description}</Text>
                             <Text c="dimmed">Дата релиза: {formatDate(game.releaseDate)}</Text>
                             <Text>
-                                Разработчик: <Anchor component={Link} to={`/developers/${game.developerId}`}>{game.developerName}</Anchor>
+                                Разработчик: <Anchor component={Link} to={developerHref}>{game.developerName}</Anchor>
                             </Text>
                             <Text>
-                                Издатель: <Anchor component={Link} to={`/publishers/${game.publisherId}`}>{game.publisherName}</Anchor>
+                                Издатель: <Anchor component={Link} to={publisherHref}>{game.publisherName}</Anchor>
                             </Text>
                         </InfoCard>
                         <InfoCard title="Категории">
@@ -89,7 +110,7 @@ export function GameDetailsPage() {
     );
 }
 
-export function DeveloperDetailsPage() {
+function DeveloperDetailsView({ mode }) {
     const { developerId } = useParams();
     const query = useDeveloperQuery(developerId);
     const developer = query.data;
@@ -111,7 +132,7 @@ export function DeveloperDetailsPage() {
                         <InfoCard title="Игры разработчика">
                             <Stack gap="xs">
                                 {(developer.games || []).map((game) => (
-                                    <Anchor key={game.id} component={Link} to={`/games/${game.id}`}>{game.title}</Anchor>
+                                    <Anchor key={game.id} component={Link} to={`/${mode}/games/${game.id}`}>{game.title}</Anchor>
                                 ))}
                             </Stack>
                         </InfoCard>
@@ -122,7 +143,7 @@ export function DeveloperDetailsPage() {
     );
 }
 
-export function PublisherDetailsPage() {
+function PublisherDetailsView({ mode }) {
     const { publisherId } = useParams();
     const query = usePublisherQuery(publisherId);
     const publisher = query.data;
@@ -144,7 +165,7 @@ export function PublisherDetailsPage() {
                         <InfoCard title="Игры издателя">
                             <Stack gap="xs">
                                 {(publisher.games || []).map((game) => (
-                                    <Anchor key={game.id} component={Link} to={`/games/${game.id}`}>{game.title}</Anchor>
+                                    <Anchor key={game.id} component={Link} to={`/${mode}/games/${game.id}`}>{game.title}</Anchor>
                                 ))}
                             </Stack>
                         </InfoCard>
@@ -155,16 +176,39 @@ export function PublisherDetailsPage() {
     );
 }
 
-export function UserDetailsPage() {
+export function AdminGameDetailsPage() {
+    return <GameDetailsView mode="admin" />;
+}
+
+export function UserGameDetailsPage() {
+    return <GameDetailsView mode="user" />;
+}
+
+export function AdminDeveloperDetailsPage() {
+    return <DeveloperDetailsView mode="admin" />;
+}
+
+export function UserDeveloperDetailsPage() {
+    return <DeveloperDetailsView mode="user" />;
+}
+
+export function AdminPublisherDetailsPage() {
+    return <PublisherDetailsView mode="admin" />;
+}
+
+export function UserPublisherDetailsPage() {
+    return <PublisherDetailsView mode="user" />;
+}
+
+export function AdminUserDetailsPage() {
     const { userId } = useParams();
     const { addGameToLibrary, removeGameFromLibrary } = useAppState();
     const [catalogOpen, setCatalogOpen] = useState(false);
     const userQuery = useUserQuery(userId);
     const { data: categories = [] } = useCategoriesQuery();
     const { data: publishers = [] } = usePublishersQuery();
-
     const user = userQuery.data;
-    const excludedGameIds = useMemo(() => (user?.games || []).map((game) => game.id), [user]);
+    const excludedGameIds = (user?.games || []).map((game) => game.id);
 
     return (
         <QueryState
@@ -184,6 +228,7 @@ export function UserDetailsPage() {
                                 publishers={publishers}
                                 showFilters={false}
                                 emptyText="Библиотека пока пуста."
+                                gameHrefBuilder={(gameId) => `/admin/games/${gameId}`}
                                 trailingAction={!catalogOpen ? <CatalogIconButton label="Открыть каталог" onClick={() => setCatalogOpen(true)} /> : null}
                                 actionRenderer={(game) => (
                                     <Button color="red" variant="light" onClick={() => void removeGameFromLibrary(user.id, game.id)}>Удалить</Button>
@@ -199,12 +244,13 @@ export function UserDetailsPage() {
                                     publishers={publishers}
                                     compact
                                     pageSize={10}
-                                    queryKeyPrefix={["user-catalog", Number(user.id)]}
+                                    queryKeyPrefix={["admin-user-catalog", Number(user.id)]}
                                     remoteFetch={(filters, page, size) => shopApi.getGames({
                                         ...filters,
                                         excludedGameIds
                                     }, page, size)}
                                     emptyText="Все игры уже добавлены в библиотеку."
+                                    gameHrefBuilder={(gameId) => `/admin/games/${gameId}`}
                                     leadingAction={<CatalogIconButton icon="close" label="Закрыть каталог" onClick={() => setCatalogOpen(false)} />}
                                     actionRenderer={(game) => (
                                         <Button onClick={() => void addGameToLibrary(user.id, game.id)}>Добавить</Button>

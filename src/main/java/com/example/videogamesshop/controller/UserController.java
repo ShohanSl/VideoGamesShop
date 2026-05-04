@@ -4,6 +4,7 @@ import com.example.videogamesshop.dto.user.UserCreateRequest;
 import com.example.videogamesshop.dto.user.UserFullResponse;
 import com.example.videogamesshop.dto.user.UserShortResponse;
 import com.example.videogamesshop.dto.user.UserUpdateRequest;
+import com.example.videogamesshop.security.JwtPrincipal;
 import com.example.videogamesshop.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +13,8 @@ import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,7 +44,9 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(summary = "Get user by id")
     public UserFullResponse getUserById(
-            @PathVariable @Positive(message = "Id must be positive") Long id) {
+            @PathVariable @Positive(message = "Id must be positive") Long id,
+            @AuthenticationPrincipal JwtPrincipal principal) {
+        ensureUserAccess(id, principal);
         return userService.getUserById(id);
     }
 
@@ -72,7 +77,9 @@ public class UserController {
     @Operation(summary = "Add a game to user library")
     public void addGameToUser(
             @PathVariable @Positive(message = "User id must be positive") Long userId,
-            @PathVariable @Positive(message = "Game id must be positive") Long gameId) {
+            @PathVariable @Positive(message = "Game id must be positive") Long gameId,
+            @AuthenticationPrincipal JwtPrincipal principal) {
+        ensureUserAccess(userId, principal);
         userService.addGameToUser(userId, gameId);
     }
 
@@ -81,7 +88,22 @@ public class UserController {
     @Operation(summary = "Remove a game from user library")
     public void removeGameFromUser(
             @PathVariable @Positive(message = "User id must be positive") Long userId,
-            @PathVariable @Positive(message = "Game id must be positive") Long gameId) {
+            @PathVariable @Positive(message = "Game id must be positive") Long gameId,
+            @AuthenticationPrincipal JwtPrincipal principal) {
+        ensureUserAccess(userId, principal);
         userService.removeGameFromUser(userId, gameId);
+    }
+
+    private void ensureUserAccess(Long userId, JwtPrincipal principal) {
+        if (principal == null) {
+            throw new AccessDeniedException("Authentication is required");
+        }
+        if (principal.isAdmin()) {
+            return;
+        }
+        if (principal.userId() != null && principal.userId().equals(userId)) {
+            return;
+        }
+        throw new AccessDeniedException("Access is denied");
     }
 }

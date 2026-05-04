@@ -31,6 +31,7 @@ export function CatalogPanel({
     categories,
     publishers,
     actionRenderer,
+    gameHrefBuilder,
     emptyText = "Список пуст.",
     pageSize = 10,
     compact = false,
@@ -49,6 +50,7 @@ export function CatalogPanel({
     const [debouncedSearch] = useDebouncedValue(search, 250);
     const isRemote = typeof remoteFetch === "function";
     const remoteScopeKey = Array.isArray(queryKeyPrefix) ? queryKeyPrefix : [queryKeyPrefix];
+    const buildGameHref = gameHrefBuilder || ((gameId) => `/games/${gameId}`);
 
     const filteredGames = useMemo(() => {
         return games.filter((game) => {
@@ -96,7 +98,7 @@ export function CatalogPanel({
             <Group justify="space-between" align="flex-start" wrap="wrap">
                 <Group gap="sm" align="center">
                     {leadingAction || null}
-                    <Title order={2}>{title}</Title>
+                    {title ? <Title order={2}>{title}</Title> : null}
                 </Group>
                 <Group gap="sm" align="center" wrap={compact ? "wrap" : "nowrap"}>
                     {showSearch ? (
@@ -176,7 +178,7 @@ export function CatalogPanel({
                         <Card key={game.id} withBorder radius="xl" padding={compact ? "md" : "lg"}>
                             <Group justify="space-between" align="flex-start" wrap="nowrap">
                                 <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
-                                    <Text component={Link} to={`/games/${game.id}`} fw={700} size="lg" td="none" c="dark">
+                                    <Text component={Link} to={buildGameHref(game.id)} fw={700} size="lg" td="none" c="dark">
                                         {game.title}
                                     </Text>
                                     <Text c="dimmed">{game.developerName} • {game.publisherName}</Text>

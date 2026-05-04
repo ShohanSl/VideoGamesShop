@@ -34,6 +34,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_game",

@@ -15,6 +15,8 @@ export function AppStateProvider({ children }) {
         await invalidateQueries(queryClient, [
             ["catalog"],
             ["management-games"],
+            ["user-catalog"],
+            ["admin-user-catalog"],
             ["game"],
             ["developer"],
             ["publisher"],
@@ -28,6 +30,8 @@ export function AppStateProvider({ children }) {
         await invalidateQueries(queryClient, [
             ["catalog"],
             ["management-games"],
+            ["user-catalog"],
+            ["admin-user-catalog"],
             shopKeys.game(gameId),
             ["developer"],
             ["publisher"],
@@ -41,6 +45,8 @@ export function AppStateProvider({ children }) {
         await invalidateQueries(queryClient, [
             ["catalog"],
             ["management-games"],
+            ["user-catalog"],
+            ["admin-user-catalog"],
             ["game"],
             ["developer"],
             ["publisher"],
@@ -189,7 +195,8 @@ export function AppStateProvider({ children }) {
         await shopApi.addGameToUser(userId, gameId);
         await invalidateQueries(queryClient, [
             shopKeys.user(userId),
-            ["user-catalog", userId]
+            ["user-catalog", userId],
+            ["admin-user-catalog", userId]
         ]);
     }
 
@@ -197,7 +204,8 @@ export function AppStateProvider({ children }) {
         await shopApi.removeGameFromUser(userId, gameId);
         await invalidateQueries(queryClient, [
             shopKeys.user(userId),
-            ["user-catalog", userId]
+            ["user-catalog", userId],
+            ["admin-user-catalog", userId]
         ]);
     }
 

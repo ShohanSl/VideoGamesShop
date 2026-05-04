@@ -118,8 +118,24 @@ const categorySchema = z.object({
     name: requiredText(STR.name)
 });
 
-const userSchema = z.object({
-    username: requiredText(STR.username)
+const userCreateSchema = z.object({
+    username: requiredText("Имя пользователя"),
+    password: z.string().min(8, "Пароль должен содержать минимум 8 символов").max(72, "Пароль должен быть не длиннее 72 символов")
+});
+
+const userUpdateSchema = z.object({
+    username: requiredText("Имя пользователя"),
+    password: z.string().max(72, "Пароль должен быть не длиннее 72 символов").optional().or(z.literal(""))
+});
+
+const userEditSchema = z.object({
+    username: requiredText("Имя пользователя"),
+    password: z.string()
+        .max(72, "Пароль должен быть не длиннее 72 символов")
+        .refine(
+            (value) => value === "" || value.length >= 8,
+            "Пароль должен содержать минимум 8 символов"
+        )
 });
 
 const bulkDeveloperSchema = z.object({
@@ -151,7 +167,7 @@ function linkCell(href, label) {
     return <Anchor component={Link} to={href}>{label}</Anchor>;
 }
 
-function EntityManagementPage({ title, description, data, columns, form, tableFooter, emptyText }) {
+function EntityManagementPage({ title, data, columns, form, tableFooter, emptyText }) {
     return (
         <SectionCard title={title}>
             <SimpleGrid cols={{ base: 1, xl: 2 }} spacing="lg" verticalSpacing="lg">
@@ -292,7 +308,7 @@ export function GamesPage() {
     const games = gamesQuery.data?.content || [];
 
     const columns = useMemo(() => [
-        { header: STR.name, cell: ({ row }) => linkCell(`/games/${row.original.id}`, row.original.title) },
+        { header: STR.name, cell: ({ row }) => linkCell(`/admin/games/${row.original.id}`, row.original.title) },
         { header: STR.developer, accessorFn: (row) => row.developerName },
         { header: STR.publisher, accessorFn: (row) => row.publisherName },
         { header: STR.price, cell: ({ row }) => formatPrice(row.original.price) },
@@ -407,7 +423,7 @@ export function DevelopersPage() {
     const { data: categories = [] } = useCategoriesQuery();
 
     const columns = useMemo(() => [
-        { header: STR.name, cell: ({ row }) => linkCell(`/developers/${row.original.id}`, row.original.name) },
+        { header: STR.name, cell: ({ row }) => linkCell(`/admin/developers/${row.original.id}`, row.original.name) },
         { header: STR.country, accessorFn: (row) => row.country },
         { header: STR.foundedDate, cell: ({ row }) => formatDate(row.original.foundedDate) },
         {
@@ -496,7 +512,7 @@ export function PublishersPage() {
     const { data: publishers = [] } = usePublishersQuery();
 
     const columns = useMemo(() => [
-        { header: STR.name, cell: ({ row }) => linkCell(`/publishers/${row.original.id}`, row.original.name) },
+        { header: STR.name, cell: ({ row }) => linkCell(`/admin/publishers/${row.original.id}`, row.original.name) },
         { header: STR.country, accessorFn: (row) => row.country },
         { header: STR.foundedDate, cell: ({ row }) => formatDate(row.original.foundedDate) },
         {
@@ -618,7 +634,7 @@ export function UsersPage() {
     const { data: users = [] } = useUsersQuery();
 
     const columns = useMemo(() => [
-        { header: STR.username, cell: ({ row }) => linkCell(`/users/${row.original.id}`, row.original.username) },
+        { header: STR.username, cell: ({ row }) => linkCell(`/admin/users/${row.original.id}`, row.original.username) },
         {
             header: STR.actions,
             cell: ({ row }) => (
@@ -630,13 +646,16 @@ export function UsersPage() {
         }
     ], [deleteUser]);
 
-    const initialValues = editingItem ? editingItem : { username: "" };
+    const initialValues = editingItem ? { username: editingItem.username, password: "" } : { username: "", password: "" };
 
     async function handleSubmit(values) {
         setSubmitting(true);
         try {
             if (editingItem) {
-                await updateUser(editingItem.id, values);
+                await updateUser(editingItem.id, {
+                    username: values.username,
+                    ...(values.password ? { password: values.password } : {})
+                });
             } else {
                 await createUser(values);
             }
@@ -654,7 +673,7 @@ export function UsersPage() {
             columns={columns}
             form={
                 <EntityForm
-                    schema={userSchema}
+                    schema={editingItem ? userEditSchema : userCreateSchema}
                     initialValues={initialValues}
                     submitLabel={editingItem ? STR.save : STR.addUser}
                     title={editingItem ? STR.editUser : STR.newUser}
@@ -662,7 +681,8 @@ export function UsersPage() {
                     onCancel={() => setEditingItem(null)}
                     loading={submitting}
                     fields={[
-                        { name: "username", label: STR.username }
+                        { name: "username", label: "Имя пользователя" },
+                        { name: "password", label: editingItem ? "Новый пароль" : "Пароль", type: "password" }
                     ]}
                 />
             }

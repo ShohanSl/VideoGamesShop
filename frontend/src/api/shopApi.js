@@ -2,6 +2,14 @@ import { httpClient } from "@/api/httpClient";
 import { buildQuery } from "@/utils/format";
 
 export const shopApi = {
+    async loginAdmin(username, password) {
+        const { data } = await httpClient.post("/auth/admin", { username, password });
+        return data;
+    },
+    async loginUser(username, password) {
+        const { data } = await httpClient.post("/auth/user", { username, password });
+        return data;
+    },
     async getGames(filters = {}, page = 0, size = 10) {
         const { data } = await httpClient.get(
             `/games${buildQuery({

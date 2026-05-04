@@ -1,18 +1,19 @@
-import { AppShell as MantineAppShell, NavLink, ScrollArea, Stack, Text, Title } from "@mantine/core";
-import { IconCategory, IconDeviceGamepad2, IconHome2, IconReportAnalytics, IconUsers, IconBuildingStore, IconCode } from "@tabler/icons-react";
-import { NavLink as RouterNavLink, Outlet } from "react-router-dom";
+import { AppShell as MantineAppShell, Button, NavLink, ScrollArea, Stack, Text, Title } from "@mantine/core";
+import { NavLink as RouterNavLink, Outlet, useNavigate } from "react-router-dom";
 import { ReportPanel } from "@/components/shell/ReportPanel";
+import { useSession } from "@/app/session/SessionContext";
 
-const NAV_ITEMS = [
-    { to: "/catalog", label: "Каталог", icon: IconHome2 },
-    { to: "/management/games", label: "Игры", icon: IconDeviceGamepad2 },
-    { to: "/management/developers", label: "Разработчики", icon: IconCode },
-    { to: "/management/publishers", label: "Издатели", icon: IconBuildingStore },
-    { to: "/management/categories", label: "Категории", icon: IconCategory },
-    { to: "/management/users", label: "Пользователи", icon: IconUsers }
-];
+export function AppShell({
+    appLabel = "Video Games Shop",
+    title,
+    subtitle,
+    navItems,
+    footer,
+    showModeReset = true
+}) {
+    const { resetSession } = useSession();
+    const navigate = useNavigate();
 
-export function AppShell() {
     return (
         <MantineAppShell
             padding="lg"
@@ -22,30 +23,63 @@ export function AppShell() {
             <MantineAppShell.Navbar p="md">
                 <MantineAppShell.Section>
                     <Stack gap={2}>
-                        <Text c="blue" fw={700} tt="uppercase" size="xs">Video Games Shop</Text>
-                        <Title order={3}>Панель управления</Title>
+                        <Text c="blue" fw={700} tt="uppercase" size="xs">{appLabel}</Text>
+                        {title ? <Title order={3}>{title}</Title> : null}
+                        {subtitle ? <Text c="dimmed" size="sm">{subtitle}</Text> : null}
                     </Stack>
                 </MantineAppShell.Section>
                 <MantineAppShell.Section grow component={ScrollArea} mt="lg">
                     <Stack gap="xs">
-                        {NAV_ITEMS.map((item) => (
+                        {navItems.map((item) => (
                             <NavLink
                                 key={item.to}
                                 component={RouterNavLink}
                                 to={item.to}
                                 label={item.label}
-                                leftSection={<item.icon size={18} />}
+                                leftSection={item.icon ? <item.icon size={18} /> : null}
                             />
                         ))}
                     </Stack>
                 </MantineAppShell.Section>
-                <MantineAppShell.Section>
-                    <ReportPanel icon={IconReportAnalytics} />
-                </MantineAppShell.Section>
+                {showModeReset ? (
+                    <MantineAppShell.Section mb="sm">
+                        <Button
+                            variant="default"
+                            fullWidth
+                            onClick={() => {
+                                resetSession();
+                                navigate("/");
+                            }}
+                        >
+                            Сменить режим
+                        </Button>
+                    </MantineAppShell.Section>
+                ) : null}
+                {footer ? <MantineAppShell.Section>{footer}</MantineAppShell.Section> : null}
             </MantineAppShell.Navbar>
             <MantineAppShell.Main>
                 <Outlet />
             </MantineAppShell.Main>
         </MantineAppShell>
+    );
+}
+
+export function AdminShell({ navItems, reportIcon: ReportIcon }) {
+    return (
+        <AppShell
+            title="Панель управления"
+            navItems={navItems}
+            footer={<ReportPanel icon={ReportIcon} />}
+        />
+    );
+}
+
+export function UserShell({ navItems, username }) {
+    return (
+        <AppShell
+            title="Пользовательский режим"
+            subtitle={username ? `Пользователь: ${username}` : null}
+            navItems={navItems}
+        />
     );
 }

@@ -14,6 +14,7 @@ import com.example.videogamesshop.repository.GameRepository;
 import com.example.videogamesshop.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final GameCacheService cacheService;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserShortResponse> getAllUsers() {
         return userRepository.findAll().stream()
@@ -38,6 +40,7 @@ public class UserService {
 
     public UserFullResponse createUser(UserCreateRequest request) {
         User user = UserMapper.toEntity(request);
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         User saved = userRepository.save(user);
         return UserMapper.toFullResponse(saved);
     }
@@ -45,6 +48,9 @@ public class UserService {
     public UserFullResponse updateUser(Long id, UserUpdateRequest request) {
         User user = findUserById(id);
         UserMapper.updateEntity(user, request);
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        }
         return UserMapper.toFullResponse(user);
     }
 
