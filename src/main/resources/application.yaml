@@ -26,8 +26,8 @@ spring:
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/videogames_shop}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:postgres}}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       pool-name: VideoGamesShopHikariPool
       minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:1}
@@ -46,7 +46,7 @@ springdoc:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:verySecretJwtKeyForVideoGamesShopChangeMe1234567890}
+    secret: ${JWT_SECRET}
     expiration-seconds: ${JWT_EXPIRATION_SECONDS:43200}
 
 management:

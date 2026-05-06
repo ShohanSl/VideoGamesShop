@@ -74,11 +74,6 @@ jobs:
         run: chmod +x mvnw
 
       - name: Test
-        env:
-          JWT_SECRET: test_secret_key_for_ci_32_characters_min
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/videogames_shop
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
         run: ./mvnw -B test
 
   docker-image:

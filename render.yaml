@@ -36,4 +36,3 @@ databases:
   - name: videogames-shop-db
     plan: free
     databaseName: videogames_shop
-    user: videogames_shop_user
